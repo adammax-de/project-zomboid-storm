@@ -8,7 +8,8 @@ import io.pzstorm.storm.metrics.StormPerformanceSandboxMetrics;
  *
  * <p>When a peer's {@code bytesInSendBufferHigh} stays above {@link #thresholdBytes()} for {@link
  * #holdTicks()} consecutive server ticks, that peer is force-disconnected with reason {@code
- * storm-send-buffer-overflow}.
+ * storm-send-buffer-overflow}. A peer inside the post-join grace is never counted; see {@code
+ * StormConnectionMetrics#pastJoinGrace}.
  *
  * <p>PZ queues HIGH-priority broadcasts (Weather, SyncClock, faction sync, ClientCommand, region
  * events, in-flight chunk data) to every {@code fullyConnected} peer without any check on send
