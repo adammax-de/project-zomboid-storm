@@ -52,6 +52,10 @@ import zombie.network.GameServer;
  *       to against congestion.
  *   <li>{@code storm_peer_kicked_send_buffer_total} — counter incremented every time the watchdog
  *       force-disconnects a peer for sustained send-buffer overflow.
+ *   <li>{@code storm_peer_last_kick_send_buffer_bytes{username}} and {@code
+ *       storm_peer_last_kick_timestamp_seconds{username}} — the HIGH send buffer and the wall clock
+ *       at that peer's most recent watchdog kick. Written once per kick, so the value survives
+ *       until the next scrape, which the live per-tick gauge does not.
  * </ul>
  *
  * <p>Everything above comes from a single {@code UdpConnection.getStatistics()} per peer per tick —
@@ -61,13 +65,20 @@ import zombie.network.GameServer;
  * <p><b>Watchdog.</b> When {@link PeerSendBufferKickConfig#enabled()} and a peer's {@code
  * bytesInSendBufferHigh} stays above {@link PeerSendBufferKickConfig#thresholdBytes()} for {@link
  * PeerSendBufferKickConfig#holdTicks()} consecutive ticks, that peer is force-disconnected with
- * reason {@link #KICK_REASON}. Disconnects are deferred until after the iteration finishes because
- * {@code UdpEngine.forceDisconnect} mutates {@code udpEngine.connections} (calls {@code
+ * reason {@link #KICK_REASON}. A peer still inside vanilla's post-join grace ({@link
+ * #pastJoinGrace}) is never counted, because the spawn-time container and item sync routinely
+ * queues more than the threshold on a healthy link. The kick sends a {@code Kicked} packet first.
+ * That packet travels at immediate priority and so overtakes the backlog, whereas RakNet queues its
+ * own disconnection notice behind it. Disconnects are deferred until after the iteration finishes
+ * because {@code UdpEngine.forceDisconnect} mutates {@code udpEngine.connections} (calls {@code
  * removeConnection}) — kicking mid-iteration would skip the next peer in the list.
  */
 public final class StormConnectionMetrics {
 
     public static final String KICK_REASON = "storm-send-buffer-overflow";
+
+    private static final String KICK_MESSAGE =
+            "The server's send queue to you backed up (" + KICK_REASON + "). Please reconnect.";
 
     private static final Gauge SEND_BUFFER_BYTES =
             Gauge.builder()
@@ -182,8 +193,24 @@ public final class StormConnectionMetrics {
                             "Peers force-disconnected by the Storm send-buffer watchdog for"
                                     + " staying above Storm.PeerSendBufferKickMb for"
                                     + " Storm.PeerSendBufferKickHoldTicks consecutive ticks."
-                                    + " Unlabelled to avoid label-cardinality growth; the specific"
-                                    + " username is logged at INFO with the kick.")
+                                    + " Unlabelled so increase() counts a peer's first kick; see"
+                                    + " storm_peer_last_kick_* for who was kicked.")
+                    .register(StormPrometheus.registry());
+
+    private static final Gauge LAST_KICK_SEND_BUFFER_BYTES =
+            Gauge.builder()
+                    .name("storm_peer_last_kick_send_buffer_bytes")
+                    .help(
+                            "HIGH send-buffer bytes at this peer's most recent watchdog kick."
+                                    + " Series exist only for peers the watchdog has kicked.")
+                    .labelNames("username")
+                    .register(StormPrometheus.registry());
+
+    private static final Gauge LAST_KICK_TIMESTAMP_SECONDS =
+            Gauge.builder()
+                    .name("storm_peer_last_kick_timestamp_seconds")
+                    .help("Unix time of this peer's most recent watchdog kick.")
+                    .labelNames("username")
                     .register(StormPrometheus.registry());
 
     private static final Set<String> lastSeenUsernames = new HashSet<>();
@@ -260,7 +287,9 @@ public final class StormConnectionMetrics {
                     .set(stats.isLimitedByOutgoingBandwidthLimit ? 1 : 0);
             BPS_LIMIT_OUTGOING.labelValues(username).set(stats.bpsLimitByOutgoingBandwidthLimit);
 
-            if (watchdogEnabled && stats.bytesInSendBufferHigh > kickThresholdBytes) {
+            if (watchdogEnabled
+                    && pastJoinGrace(c)
+                    && stats.bytesInSendBufferHigh > kickThresholdBytes) {
                 int count = consecutiveTicksOverThreshold.getOrDefault(username, 0) + 1;
                 consecutiveTicksOverThreshold.put(username, count);
                 if (count >= PeerSendBufferKickConfig.holdTicks()) {
@@ -304,11 +333,9 @@ public final class StormConnectionMetrics {
             for (UdpConnection c : toKick) {
                 String label = labelFor(c);
                 String username = label != null ? label : "guid:" + c.getConnectedGUID();
-                double mb = 0.0;
                 ZNetStatistics stats = c.getStatistics();
-                if (stats != null) {
-                    mb = stats.bytesInSendBufferHigh / (1024.0 * 1024.0);
-                }
+                double highBytes = stats != null ? stats.bytesInSendBufferHigh : 0.0;
+                double mb = highBytes / (1024.0 * 1024.0);
                 LOGGER.info(
                         "Storm: force-disconnecting peer {} (steamId={} ip={}) — HIGH send buffer"
                                 + " {} MB held above Storm.PeerSendBufferKickMb threshold for {}"
@@ -319,6 +346,17 @@ public final class StormConnectionMetrics {
                         String.format("%.1f", mb),
                         PeerSendBufferKickConfig.holdTicks());
                 KICKED_SEND_BUFFER.inc();
+                if (label != null) {
+                    LAST_KICK_SEND_BUFFER_BYTES.labelValues(label).set(highBytes);
+                    LAST_KICK_TIMESTAMP_SECONDS
+                            .labelValues(label)
+                            .set(System.currentTimeMillis() / 1000.0);
+                }
+                try {
+                    GameServer.kick(c, "UI_Policy_Kick", KICK_MESSAGE);
+                } catch (Throwable t) {
+                    LOGGER.warn("Storm: Kicked packet failed for peer {}", username, t);
+                }
                 try {
                     c.forceDisconnect(KICK_REASON);
                 } catch (Throwable t) {
@@ -326,6 +364,14 @@ public final class StormConnectionMetrics {
                 }
             }
         }
+    }
+
+    /**
+     * Vanilla's own test for "this peer has finished joining", the one {@code PingManager} applies
+     * before a ping kick. It turns true about 75 s after {@code setFullyConnected()}.
+     */
+    static boolean pastJoinGrace(UdpConnection c) {
+        return c.isFullyConnected() && c.isConnectionGraceIntervalTimeout();
     }
 
     /**
