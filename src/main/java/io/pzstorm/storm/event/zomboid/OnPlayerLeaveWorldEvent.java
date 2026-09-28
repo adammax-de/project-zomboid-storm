@@ -16,8 +16,7 @@ import zombie.core.raknet.UdpConnection;
  * away; {@code false} means the same connection will shortly register a new character and fire
  * {@link OnPlayerEnterWorldEvent}.
  *
- * <p>Fired by {@code GameServerPlayerConnectionEventsPatch}. Replaces the deprecated {@link
- * io.pzstorm.storm.event.lua.OnPlayerDisconnectedEvent}.
+ * <p>Fired by {@code GameServerPlayerConnectionEventsPatch}.
  */
 public class OnPlayerLeaveWorldEvent implements ZomboidEvent {
 
