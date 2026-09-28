@@ -205,7 +205,7 @@ test {
 		excludeTags 'perf'
 	}
 
-	// The Java popman port does not match the 42.21.0 natives yet (see popManPortMatchesGame)
+	// The Java popman port does not match the current game's natives (see popManPortMatchesGame)
 
 	exclude 'io/pzstorm/storm/popman/**', 'io/pzstorm/storm/patch/popman/**'
 	systemProperty 'storm.testing', 'true'

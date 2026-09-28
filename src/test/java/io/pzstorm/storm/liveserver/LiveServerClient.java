@@ -266,11 +266,10 @@ public final class LiveServerClient implements AutoCloseable {
     }
 
     /**
-     * Sends a real {@link GeneralActionPacket} with {@code state=Reject} over the wire, mirroring
-     * vanilla {@code ActionManager.remove(byte,boolean)}'s client-side send. Only {@code id} and
-     * {@code state} are assigned — the inherited {@code playerId} is left at its default — so the
-     * on-the-wire payload deliberately carries no caller identity. That is the bug surface {@code
-     * GeneralActionPacketPatch} repairs server-side.
+     * Sends a real {@link GeneralActionPacket} with {@code state=Reject} over the wire. Only {@code
+     * id} and {@code state} are assigned, so {@code playerId} stays at its default and the packet
+     * names no player. The server must attribute the reject to the sending connection, which is
+     * what {@code GeneralActionPacketPatch} does.
      */
     public void sendGeneralActionReject(byte actionByteId) {
         GeneralActionPacket packet =
