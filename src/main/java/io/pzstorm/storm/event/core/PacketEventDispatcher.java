@@ -77,7 +77,6 @@ public class PacketEventDispatcher {
                     "zombie.network.packets.RemoveUserlogPacket",
                     "zombie.network.packets.RequestDataPacket",
                     "zombie.network.packets.RequestItemsForContainerPacket",
-                    "zombie.network.packets.RequestLargeAreaZipPacket",
                     "zombie.network.packets.RequestMedicalCheckPacket",
                     "zombie.network.packets.RequestNetworkUsersPacket",
                     "zombie.network.packets.RequestRolesPacket",

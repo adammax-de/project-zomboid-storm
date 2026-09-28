@@ -1,11 +1,12 @@
 package io.pzstorm.storm.event.packet;
 
 import zombie.core.raknet.UdpConnection;
-import zombie.network.packets.RequestLargeAreaZipPacket;
 
 /**
- * Typed event dispatched when {@link zombie.network.packets.RequestLargeAreaZipPacket} is processed
- * on the server.
+ * Typed event dispatched when a large-area zip request packet is processed on the server.
+ *
+ * <p>Build 42.21 removed {@code zombie.network.packets.RequestLargeAreaZipPacket}. The event stays
+ * so existing listeners still resolve; {@link #getPacket()} returns the raw packet object.
  */
 public class RequestLargeAreaZipPacketEvent extends PacketEvent {
 
@@ -13,8 +14,8 @@ public class RequestLargeAreaZipPacketEvent extends PacketEvent {
         super(packet, connection);
     }
 
-    public RequestLargeAreaZipPacket getPacket() {
-        return (RequestLargeAreaZipPacket) getRawPacket();
+    public Object getPacket() {
+        return getRawPacket();
     }
 
     @Override

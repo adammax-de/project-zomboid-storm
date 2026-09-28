@@ -1,6 +1,9 @@
 package io.pzstorm.storm.patch.fixes;
 
+import static io.pzstorm.storm.logging.StormLogger.LOGGER;
+
 import io.pzstorm.storm.core.StormClassTransformer;
+import java.util.concurrent.atomic.AtomicBoolean;
 import net.bytebuddy.asm.MemberSubstitution;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -27,15 +30,19 @@ import net.bytebuddy.pool.TypePool;
  * field write is untouched (the now-unread field stays initialized). See {@code
  * SaveLoadedTaskCrcRacePatch} for the sibling race on the outer {@code crcSave}.
  *
- * <p>Fail-loud: the hook is name-string based, so a vanilla rename would otherwise silently no-op
- * and reintroduce the race. {@link #dynamicType} throws if {@code addLoadedJob} or {@code crc32}
- * are no longer declared — re-verify against the game source on update.
+ * <p>Fail-loud while a {@code CRC32} field still exists: the hook is name-string based, so a vanilla
+ * rename would otherwise silently no-op and reintroduce the race. {@link #dynamicType} throws if
+ * {@code crc32} is gone but another {@code CRC32} field remains, or if {@code crc32} remains and
+ * {@code addLoadedJob} does not. Build 42.21 removed the field and checksums a local {@code CRC32}
+ * instead; that shape skips once with a log instead of aborting the JVM.
  *
  * <p>Registration-gated to the dedicated server ({@code StormEnv.isStormServer()}).
  */
 public class SaveChunkThreadCrcRacePatch extends StormClassTransformer {
 
     private static final String SCRATCH = "io.pzstorm.storm.map.StormChunkSaveCrc";
+    private static final String CRC32 = "java.util.zip.CRC32";
+    private static final AtomicBoolean SKIP_LOGGED = new AtomicBoolean();
 
     public SaveChunkThreadCrcRacePatch() {
         super("zombie.network.ServerChunkLoader$SaveChunkThread");
@@ -45,14 +52,36 @@ public class SaveChunkThreadCrcRacePatch extends StormClassTransformer {
     public DynamicType.Builder<Object> dynamicType(
             ClassFileLocator locator, TypePool typePool, DynamicType.Builder<Object> builder) {
         TypeDescription target = typePool.describe(className).resolve();
+        boolean hasCrc32 = !target.getDeclaredFields().filter(ElementMatchers.named("crc32")).isEmpty();
+        boolean hasOtherCrc32 =
+                !target.getDeclaredFields()
+                        .filter(
+                                ElementMatchers.fieldType(ElementMatchers.named(CRC32))
+                                        .and(ElementMatchers.not(ElementMatchers.named("crc32"))))
+                        .isEmpty();
+        if (!hasCrc32) {
+            if (hasOtherCrc32) {
+                throw new IllegalStateException(
+                        "SaveChunkThreadCrcRacePatch: ServerChunkLoader$SaveChunkThread no longer"
+                                + " declares field crc32 but still declares another CRC32 field —"
+                                + " refusing to skip because a renamed shared checksum would"
+                                + " silently no-op. Re-verify the patch against the current game"
+                                + " source.");
+            }
+            if (SKIP_LOGGED.compareAndSet(false, true)) {
+                LOGGER.error(
+                        "SaveChunkThreadCrcRacePatch skipped: ServerChunkLoader$SaveChunkThread"
+                                + " has no crc32 field and no CRC32 field under another name."
+                                + " Vanilla checksums a local CRC32; the shared-field hook is not"
+                                + " applied.");
+            }
+            return builder;
+        }
         requireDeclared(
                 !target.getDeclaredMethods()
                         .filter(ElementMatchers.named("addLoadedJob"))
                         .isEmpty(),
                 "method addLoadedJob");
-        requireDeclared(
-                !target.getDeclaredFields().filter(ElementMatchers.named("crc32")).isEmpty(),
-                "field crc32");
 
         MethodDescription replacement =
                 typePool.describe(SCRATCH)

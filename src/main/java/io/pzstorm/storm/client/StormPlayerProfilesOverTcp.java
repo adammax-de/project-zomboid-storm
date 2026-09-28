@@ -4,6 +4,7 @@ import static io.pzstorm.storm.logging.StormLogger.LOGGER;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Arrays;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
@@ -31,8 +32,7 @@ public final class StormPlayerProfilesOverTcp {
                     ClientPlayerDB.getInstance().networkProfile;
             if (existing != null
                     && existing.isLoaded
-                    && existing.username != null
-                    && existing.username.equals(GameClient.username)
+                    && sameUser(existing.username, GameClient.username)
                     && existing.server != null
                     && existing.server.equals(GameClient.ip)) {
                 // Vanilla's fast path will already return without network.
@@ -56,7 +56,8 @@ public final class StormPlayerProfilesOverTcp {
 
             ClientPlayerDB.NetworkCharacterProfile profile =
                     new ClientPlayerDB.NetworkCharacterProfile();
-            profile.username = GameClient.username;
+            profile.username = new String[profile.character.length];
+            Arrays.fill(profile.username, GameClient.username);
             profile.server = GameClient.ip;
             profile.playerCount = profiles.size();
             for (int i = 0; i < profiles.size() && i < profile.character.length; i++) {
@@ -78,5 +79,18 @@ public final class StormPlayerProfilesOverTcp {
         } catch (Throwable t) {
             LOGGER.error("Player profiles over TCP failed; falling back to UDP", t);
         }
+    }
+
+    /** 42.21 stores one username per character slot. */
+    private static boolean sameUser(String[] names, String user) {
+        if (names == null || user == null || names.length == 0) {
+            return false;
+        }
+        for (String name : names) {
+            if (!user.equals(name)) {
+                return false;
+            }
+        }
+        return true;
     }
 }

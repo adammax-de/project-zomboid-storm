@@ -1,6 +1,9 @@
 package io.pzstorm.storm.patch.fixes;
 
+import static io.pzstorm.storm.logging.StormLogger.LOGGER;
+
 import io.pzstorm.storm.core.StormClassTransformer;
+import java.util.concurrent.atomic.AtomicBoolean;
 import net.bytebuddy.asm.MemberSubstitution;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -27,9 +30,11 @@ import net.bytebuddy.pool.TypePool;
  * initialization is untouched. See {@code SaveChunkThreadCrcRacePatch} for the sibling race on
  * {@code SaveChunkThread.crc32}.
  *
- * <p>Fail-loud: the hook is name-string based, so a vanilla rename would otherwise silently no-op
- * and reintroduce the race. {@link #dynamicType} throws if {@code save} or the outer {@code
- * crcSave} are no longer declared — re-verify against the game source on update.
+ * <p>Fail-loud while a {@code CRC32} field still exists on the outer loader: the hook is name-string
+ * based, so a vanilla rename would otherwise silently no-op and reintroduce the race. {@link
+ * #dynamicType} throws if {@code crcSave} is gone but another outer {@code CRC32} field remains, or
+ * if {@code crcSave} remains and {@code save()} does not. Build 42.21 removed {@code crcSave};
+ * that shape skips once with a log instead of aborting the JVM.
  *
  * <p>Registration-gated to the dedicated server ({@code StormEnv.isStormServer()}).
  */
@@ -38,6 +43,8 @@ public class SaveLoadedTaskCrcRacePatch extends StormClassTransformer {
     private static final String OUTER = "zombie.network.ServerChunkLoader";
 
     private static final String SCRATCH = "io.pzstorm.storm.map.StormChunkSaveCrc";
+    private static final String CRC32 = "java.util.zip.CRC32";
+    private static final AtomicBoolean SKIP_LOGGED = new AtomicBoolean();
 
     public SaveLoadedTaskCrcRacePatch() {
         super("zombie.network.ServerChunkLoader$SaveLoadedTask");
@@ -48,6 +55,30 @@ public class SaveLoadedTaskCrcRacePatch extends StormClassTransformer {
             ClassFileLocator locator, TypePool typePool, DynamicType.Builder<Object> builder) {
         TypeDescription target = typePool.describe(className).resolve();
         TypeDescription outer = typePool.describe(OUTER).resolve();
+        boolean hasCrcSave =
+                !outer.getDeclaredFields().filter(ElementMatchers.named("crcSave")).isEmpty();
+        boolean hasOtherCrc32 =
+                !outer.getDeclaredFields()
+                        .filter(
+                                ElementMatchers.fieldType(ElementMatchers.named(CRC32))
+                                        .and(ElementMatchers.not(ElementMatchers.named("crcSave"))))
+                        .isEmpty();
+        if (!hasCrcSave) {
+            if (hasOtherCrc32) {
+                throw new IllegalStateException(
+                        "SaveLoadedTaskCrcRacePatch: ServerChunkLoader no longer declares crcSave"
+                                + " but still declares another CRC32 field — refusing to skip"
+                                + " because a renamed shared checksum would silently no-op."
+                                + " Re-verify the patch against the current game source.");
+            }
+            if (SKIP_LOGGED.compareAndSet(false, true)) {
+                LOGGER.error(
+                        "SaveLoadedTaskCrcRacePatch skipped: ServerChunkLoader has no crcSave field"
+                                + " and no CRC32 field under another name. The dedup-checksum hook"
+                                + " is not applied.");
+            }
+            return builder;
+        }
         requireDeclared(
                 !target.getDeclaredMethods()
                         .filter(
@@ -55,9 +86,6 @@ public class SaveLoadedTaskCrcRacePatch extends StormClassTransformer {
                                         .and(ElementMatchers.takesArguments(0)))
                         .isEmpty(),
                 "method save()");
-        requireDeclared(
-                !outer.getDeclaredFields().filter(ElementMatchers.named("crcSave")).isEmpty(),
-                "outer field ServerChunkLoader.crcSave");
 
         MethodDescription replacement =
                 typePool.describe(SCRATCH)
