@@ -1,7 +1,6 @@
 package io.pzstorm.storm.event.packet;
 
 import zombie.core.raknet.UdpConnection;
-import zombie.iso.areas.SafeHouse;
 import zombie.network.packets.safehouse.SafehouseChangeMemberPacket;
 
 /**
@@ -27,18 +26,10 @@ public class SafehouseChangeMemberPacketEvent extends PacketEvent {
 
     @Override
     public void capturePreState() {
-        wasMember = getSafehouse().getPlayers().contains(getPlayer());
+        wasMember = getPacket().getSafehouse().getPlayers().contains(getPacket().getUsername());
     }
 
     public boolean wasMember() {
         return wasMember;
-    }
-
-    public SafeHouse getSafehouse() {
-        return getPacket().getSafehouse();
-    }
-
-    public String getPlayer() {
-        return getPacket().getUsername();
     }
 }

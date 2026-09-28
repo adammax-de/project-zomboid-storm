@@ -56,7 +56,7 @@ public final class StormPlayerProfilesOverTcp {
 
             ClientPlayerDB.NetworkCharacterProfile profile =
                     new ClientPlayerDB.NetworkCharacterProfile();
-            profile.username = GameClient.username;
+            profile.username[0] = GameClient.username;
             profile.server = GameClient.ip;
             profile.playerCount = profiles.size();
             for (int i = 0; i < profiles.size() && i < profile.character.length; i++) {
@@ -67,6 +67,9 @@ public final class StormPlayerProfilesOverTcp {
                 profile.y[i] = (float) p.get("y").asDouble();
                 profile.z[i] = (float) p.get("z").asDouble();
                 profile.isDead[i] = p.get("isDead").asBoolean();
+                if (i > 0) {
+                    profile.username[i] = p.path("username").asText(null);
+                }
             }
             if (profile.playerCount == 0) {
                 // Same default vanilla applies for a fresh character on this server.

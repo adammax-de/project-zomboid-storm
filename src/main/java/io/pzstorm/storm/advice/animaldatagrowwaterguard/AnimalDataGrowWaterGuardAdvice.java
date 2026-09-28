@@ -33,7 +33,7 @@ public class AnimalDataGrowWaterGuardAdvice {
             return false;
         }
         boolean onWater = parent.checkForWater();
-        boolean duplicate = !onWater && parent.checkForChickenpocalypse();
+        boolean duplicate = !onWater && parent.checkForChickenpocalypse(null);
         if (!onWater && !duplicate) {
             return false;
         }

@@ -1,7 +1,6 @@
 package io.pzstorm.storm.event.packet;
 
 import zombie.core.raknet.UdpConnection;
-import zombie.network.fields.vehicle.VehicleID;
 import zombie.network.packets.hit.PlayerHitVehiclePacket;
 
 /**
@@ -21,13 +20,5 @@ public class PlayerHitVehiclePacketEvent extends PacketEvent {
     @Override
     public String getName() {
         return "PlayerHitVehiclePacketEvent";
-    }
-
-    public VehicleID getVehicleId() {
-        return (VehicleID) getField("vehicleId");
-    }
-
-    public Float getDamage() {
-        return (Float) getField("damage");
     }
 }

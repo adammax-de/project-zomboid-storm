@@ -1,7 +1,6 @@
 package io.pzstorm.storm.event.packet;
 
 import zombie.core.raknet.UdpConnection;
-import zombie.iso.areas.SafeHouse;
 import zombie.network.packets.safehouse.SafehouseReleasePacket;
 
 /**
@@ -21,9 +20,5 @@ public class SafehouseReleasePacketEvent extends PacketEvent {
     @Override
     public String getName() {
         return "SafehouseReleasePacketEvent";
-    }
-
-    public SafeHouse getSafehouse() {
-        return getPacket().getSafehouse();
     }
 }

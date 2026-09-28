@@ -76,9 +76,6 @@ import io.pzstorm.storm.patch.fixes.NetTimedActionParsePatch;
 import io.pzstorm.storm.patch.fixes.PopManSaveAdoptFixPatch;
 import io.pzstorm.storm.patch.fixes.RefreshAnimSetsLockPatch;
 import io.pzstorm.storm.patch.fixes.RequestDataManagerFixPatch;
-import io.pzstorm.storm.patch.fixes.RequestSaveCellSuppressPatch;
-import io.pzstorm.storm.patch.fixes.SaveChunkThreadCrcRacePatch;
-import io.pzstorm.storm.patch.fixes.SaveLoadedTaskCrcRacePatch;
 import io.pzstorm.storm.patch.fixes.ServerCellRecalcCrashGuardPatch;
 import io.pzstorm.storm.patch.fixes.SitOnFurnitureBoxedInChairPatch;
 import io.pzstorm.storm.patch.fixes.SpriteConfigFixPatch;
@@ -337,6 +334,7 @@ import io.pzstorm.storm.patch.performance.ZomboidRadioUpdatePatch;
 import io.pzstorm.storm.patch.popman.DebugCommandsNativePatch;
 import io.pzstorm.storm.patch.popman.MPDebugInfoNativePatch;
 import io.pzstorm.storm.patch.popman.MapCollisionDataNativePatch;
+import io.pzstorm.storm.patch.popman.NativeFacadePatch;
 import io.pzstorm.storm.patch.popman.ZombiePopulationManagerNativePatch;
 import io.pzstorm.storm.patch.popman.ZombiePopulationRendererNativePatch;
 import io.pzstorm.storm.patch.rendering.EpilepsyWarningSkipPatch;
@@ -544,7 +542,7 @@ public class StormClassTransformers {
         // Off by default: the Java port of PZPopMan64 (population manager + collision map)
         // is experimental. With it on, every native of the DLL is Java and the library is
         // never loaded.
-        if (Boolean.getBoolean("storm.popman.java")) {
+        if (Boolean.getBoolean("storm.popman.java") && popManPortMatchesGame()) {
             registerTransformer(new ZombiePopulationManagerNativePatch());
             registerTransformer(new MapCollisionDataNativePatch());
             registerTransformer(new MPDebugInfoNativePatch());
@@ -613,7 +611,6 @@ public class StormClassTransformers {
             registerTransformer(new ServerTickPatch());
             registerTransformer(new MainLoopDrainCapPatch());
             registerTransformer(new IsoObjectIDAllocateFixPatch());
-            registerTransformer(new RequestSaveCellSuppressPatch());
             registerTransformer(new ReceiveSandboxOptionsPatch());
             registerTransformer(new IsoZombieUpdateFixPatch());
             registerTransformer(new IsoAnimalRegistryFixPatch());
@@ -657,8 +654,6 @@ public class StormClassTransformers {
             registerTransformer(new ServerCellUpdatePatch());
             registerTransformer(new NetworkZombiePackerPostUpdatePatch());
             registerTransformer(new ServerChunkLoaderUpdateSavedPatch());
-            registerTransformer(new SaveChunkThreadCrcRacePatch());
-            registerTransformer(new SaveLoadedTaskCrcRacePatch());
             registerTransformer(new ServerMapQueuedSaveAllPatch());
             registerTransformer(new ServerMapPostUpdateWarmPatch());
             registerTransformer(new MovingObjectSchedulerBucketAddPatch());
@@ -773,6 +768,45 @@ public class StormClassTransformers {
             registerTransformer(new PacketReceivedPatch(packetClass));
         }
         errorIfTargetsAlreadyLoaded();
+    }
+
+    /**
+     * The five facades replace one library, so they apply together or not at all. A game build
+     * whose natives the port doesn't cover keeps vanilla {@code PZPopMan64}; a partial port would
+     * throw {@link UnsatisfiedLinkError} on the first unported call.
+     */
+    private static boolean popManPortMatchesGame() {
+        TypePool typePool =
+                TypePool.Default.of(
+                        new ClassFileLocator.Compound(
+                                ClassFileLocator.ForClassLoader.of(
+                                        StormClassTransformers.class.getClassLoader()),
+                                ClassFileLocator.ForClassLoader.ofSystemLoader()));
+        List<String> mismatches = new ArrayList<>();
+        try {
+            for (NativeFacadePatch patch :
+                    List.of(
+                            new ZombiePopulationManagerNativePatch(),
+                            new MapCollisionDataNativePatch(),
+                            new MPDebugInfoNativePatch(),
+                            new DebugCommandsNativePatch(),
+                            new ZombiePopulationRendererNativePatch())) {
+                for (String mismatch : patch.mismatches(typePool)) {
+                    mismatches.add(patch.getClassName() + " " + mismatch);
+                }
+            }
+        } catch (RuntimeException e) {
+            LOGGER.error("Java popman port disabled: cannot read the game's popman classes", e);
+            return false;
+        }
+        if (!mismatches.isEmpty()) {
+            LOGGER.error(
+                    "Java popman port disabled: it does not match this game build's natives,"
+                            + " using PZPopMan64 instead. Mismatches: {}",
+                    mismatches);
+            return false;
+        }
+        return true;
     }
 
     private static void registerTransformer(StormClassTransformer transformer) {

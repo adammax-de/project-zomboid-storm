@@ -81,9 +81,11 @@ public class GamePortPlayerProfileEndpoints {
         }
         String sql =
                 bySteamId
-                        ? "SELECT id, x, y, z, data, worldversion, isDead FROM networkPlayers WHERE"
+                        ? "SELECT id, x, y, z, data, worldversion, isDead, splitUsername FROM"
+                                + " networkPlayers WHERE"
                                 + " steamid=? AND world=? AND playerIndex=?"
-                        : "SELECT id, x, y, z, data, worldversion, isDead FROM networkPlayers WHERE"
+                        : "SELECT id, x, y, z, data, worldversion, isDead, splitUsername FROM"
+                                + " networkPlayers WHERE"
                                 + " username=? AND world=? AND playerIndex=?";
         List<Map<String, Object>> profiles = new ArrayList<>();
         for (int index = 0; index < MAX_PLAYER_SLOTS; index++) {
@@ -103,6 +105,7 @@ public class GamePortPlayerProfileEndpoints {
                 profile.put("data", Base64.getEncoder().encodeToString(rs.getBytes(5)));
                 profile.put("worldVersion", rs.getInt(6));
                 profile.put("isDead", rs.getBoolean(7));
+                profile.put("username", rs.getString(8));
                 profiles.add(profile);
             }
         }

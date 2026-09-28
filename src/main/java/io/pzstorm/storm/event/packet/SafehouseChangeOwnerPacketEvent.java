@@ -18,7 +18,7 @@ public class SafehouseChangeOwnerPacketEvent extends PacketEvent {
 
     @Override
     public void capturePreState() {
-        SafeHouse safehouse = getSafehouse();
+        SafeHouse safehouse = getPacket().getSafehouse();
         if (safehouse != null) {
             previousOwner = safehouse.getOwner();
         }
@@ -31,14 +31,6 @@ public class SafehouseChangeOwnerPacketEvent extends PacketEvent {
     @Override
     public String getName() {
         return "SafehouseChangeOwnerPacketEvent";
-    }
-
-    public SafeHouse getSafehouse() {
-        return getPacket().getSafehouse();
-    }
-
-    public String getPlayer() {
-        return getPacket().getUsername();
     }
 
     /** Returns the safehouse owner before the ownership change was processed. */

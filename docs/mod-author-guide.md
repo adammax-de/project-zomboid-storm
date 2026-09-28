@@ -95,7 +95,10 @@ typed event — their wire types are the Reliable/Unreliable subclasses; use
 `@OnPacketReceived("PlayerPacketReliable")` etc. to observe those. Subscribe with
 `@SubscribeEvent` on the typed class to get a strongly-typed `getPacket()`,
 field-cache helpers, and a `capturePreState()` hook for snapshotting state
-before the packet's `processServer` mutates it:
+before the packet's `processServer` mutates it. Typed events add no other
+accessors, except a few safehouse events that expose the state they snapshot
+in `capturePreState()` (e.g. `SafehouseChangeOwnerPacketEvent.getPreviousOwner()`).
+Read everything else from the packet:
 
 ```java
 @SubscribeEvent
