@@ -12,6 +12,7 @@ import io.pzstorm.storm.patch.client.GameClientStartClientRetryPatch;
 import io.pzstorm.storm.patch.client.ImageDataCreateSteamAvatarLeakPatch;
 import io.pzstorm.storm.patch.client.IsoBulletTracerEffectsConfigNullGuardPatch;
 import io.pzstorm.storm.patch.client.IsoFallingClothingDropNullGuardPatch;
+import io.pzstorm.storm.patch.client.IsoHutchNullAnimalSlotGuardPatch;
 import io.pzstorm.storm.patch.client.IsoObjectAdminSeeAllTargetAlphaPatch;
 import io.pzstorm.storm.patch.client.IsoWorldInventoryObjectRenderSpriteGuardPatch;
 import io.pzstorm.storm.patch.client.LoadingQueueStateTcpDrainPatch;
@@ -586,6 +587,7 @@ public class StormClassTransformers {
             registerTransformer(new IsoWorldInventoryObjectRenderSpriteGuardPatch());
             registerTransformer(new CombatManagerBallisticsNullGuardPatch());
             registerTransformer(new IsoFallingClothingDropNullGuardPatch());
+            registerTransformer(new IsoHutchNullAnimalSlotGuardPatch());
             registerTransformer(new IsoBulletTracerEffectsConfigNullGuardPatch());
             registerTransformer(new RequestDataOverTcpPatch());
             registerTransformer(new PlayerProfileOverTcpPatch());
