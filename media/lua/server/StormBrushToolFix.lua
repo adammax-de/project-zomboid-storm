@@ -50,9 +50,9 @@ local function onClientCommand(module, command, player, args)
     if not square then
         return
     end
-    -- self is unused by the vanilla create(); showDebugInfoInChat is a no-op on the
-    -- server, so the original function is safe to run here as-is.
-    _originalCreate(nil, args.x, args.y, args.z, args.north, args.sprite)
+    -- Vanilla create() reads only self.character; showDebugInfoInChat is a no-op on
+    -- the server, so the original function is safe to run here as-is.
+    _originalCreate({ character = player }, args.x, args.y, args.z, args.north, args.sprite)
 end
 
 Events.OnClientCommand.Add(onClientCommand)
