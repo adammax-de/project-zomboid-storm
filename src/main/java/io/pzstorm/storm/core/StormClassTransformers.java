@@ -276,6 +276,12 @@ import io.pzstorm.storm.patch.performance.PropertyContainerHasIdCachePatch;
 import io.pzstorm.storm.patch.performance.PropertyContainerHasStringIdCachePatch;
 import io.pzstorm.storm.patch.performance.PublicServerUtilUpdatePatch;
 import io.pzstorm.storm.patch.performance.PublicServerUtilUpdatePlayerCountPatch;
+import io.pzstorm.storm.patch.performance.PuddleBatchChunkReusePatch;
+import io.pzstorm.storm.patch.performance.PuddleBatchInvalidationPatch;
+import io.pzstorm.storm.patch.performance.PuddleBatchRenderPatch;
+import io.pzstorm.storm.patch.performance.PuddleDepthClampPatch;
+import io.pzstorm.storm.patch.performance.PuddleShaderCompileFallbackPatch;
+import io.pzstorm.storm.patch.performance.PuddleShaderSourceRewritePatch;
 import io.pzstorm.storm.patch.performance.RCONServerUpdatePatch;
 import io.pzstorm.storm.patch.performance.RanchAnimalSpawnMetricsPatch;
 import io.pzstorm.storm.patch.performance.RandAdjustForFrameratePatch;
@@ -453,6 +459,12 @@ public class StormClassTransformers {
             if (!StormEnv.isStormServer()) {
                 registerTransformer(new GLVertexBufferObjectPersistentMapPatch());
                 registerTransformer(new SpriteRendererFrameFencePatch());
+                registerTransformer(new PuddleBatchRenderPatch());
+                registerTransformer(new PuddleBatchInvalidationPatch());
+                registerTransformer(new PuddleBatchChunkReusePatch());
+                registerTransformer(new PuddleShaderSourceRewritePatch());
+                registerTransformer(new PuddleShaderCompileFallbackPatch());
+                registerTransformer(new PuddleDepthClampPatch());
             }
         }
         if (StormEnv.isStormServer()) {
