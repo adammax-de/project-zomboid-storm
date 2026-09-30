@@ -183,6 +183,25 @@ enables Storm-core client Java features:
   re-validation: the `WorldRegionToMetaGrid.worldRegions` field and
   `IsoWorldRegion` still inheriting `equals`/`hashCode` from `Object`.
 
+- **Settled vehicle part animations** (behind
+  `-Dstorm.experimental.clientperf=true`) — `BaseVehicle.postupdate` runs
+  `AnimationPlayer.Update` for the body and every part model of every loaded
+  vehicle on every frame, parked or not. A parked vehicle's doors, hood,
+  trunk and windows sit on held tracks, so each of those updates recomputes
+  the pose it computed the frame before. In a 42.21 client JFR
+  `BaseVehicle.postupdate` was 13.2% of MainThread over 24 minutes (10.5% in
+  `updateAnimationPlayer`) and 19-29% in every minute spent in a car park.
+  `VehiclePartAnimSettledSkipPatch` routes that one call in
+  `updateAnimationPlayer` through `VehiclePartAnimSettle`, which skips it
+  while no track is playing, the skinning data and every track's identity,
+  clip, time, blend weight and reverse flag match the last real update, and
+  the last two real updates each reproduced the pose before them bit for
+  bit. At most 59 updates in a row are skipped. The rest of
+  `updateAnimationPlayer` still runs every frame, so a door opening or a
+  window moving is picked up on the frame vanilla picks it up. Fails soft:
+  any exception disables it for the session. PZ-update re-validation:
+  `updateAnimationPlayer` still calling `AnimationPlayer.Update(float)`.
+
 - **Client socket retry on connect** — `GameClient.startClient` draws its
   local UDP port at random from a 10 000-port window and binds it once. On a
   machine where a few hundred of those ports are already taken (routine on

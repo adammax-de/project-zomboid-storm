@@ -315,6 +315,7 @@ import io.pzstorm.storm.patch.performance.UsingPlayerSweepFastPathPatch;
 import io.pzstorm.storm.patch.performance.UsingPlayerUpdatePatch;
 import io.pzstorm.storm.patch.performance.VehicleManagerSendVehiclesPatch;
 import io.pzstorm.storm.patch.performance.VehicleManagerServerUpdatePatch;
+import io.pzstorm.storm.patch.performance.VehiclePartAnimSettledSkipPatch;
 import io.pzstorm.storm.patch.performance.VehicleSoundRelevancePatch;
 import io.pzstorm.storm.patch.performance.VirtualAnimalStridePatch;
 import io.pzstorm.storm.patch.performance.WarManagerUpdatePatch;
@@ -441,6 +442,7 @@ public class StormClassTransformers {
             registerTransformer(new FBORenderLevelsFreeSkipPatch());
             registerTransformer(new CutawayVisitFastPathPatch());
             registerTransformer(new FBORenderCellRenderLayerHoistPatch());
+            registerTransformer(new VehiclePartAnimSettledSkipPatch());
         }
         if (StormEnv.isStormServer()) {
             registerTransformer(new IsoGeneratorElectricityPatch());
