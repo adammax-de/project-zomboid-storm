@@ -78,7 +78,10 @@ public final class StormConnectionMetrics {
     public static final String KICK_REASON = "storm-send-buffer-overflow";
 
     private static final String KICK_MESSAGE =
-            "The server's send queue to you backed up (" + KICK_REASON + "). Please reconnect.";
+            "Your internet connection is bad and was not receiving data from the server in time."
+                    + " You had to be disconnected to prevent the server from lagging for everyone"
+                    + " else. To fix this, reboot your router and computer, and stop other internet"
+                    + " usage like downloads, streaming, or other games.";
 
     private static final Gauge SEND_BUFFER_BYTES =
             Gauge.builder()
