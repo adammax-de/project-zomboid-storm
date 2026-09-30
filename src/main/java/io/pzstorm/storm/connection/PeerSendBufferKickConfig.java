@@ -8,8 +8,8 @@ import io.pzstorm.storm.metrics.StormPerformanceSandboxMetrics;
  *
  * <p>When a peer's {@code bytesInSendBufferHigh} stays above {@link #thresholdBytes()} for {@link
  * #holdTicks()} consecutive server ticks, that peer is force-disconnected with reason {@code
- * storm-send-buffer-overflow}. A peer inside the post-join grace is never counted; see {@code
- * StormConnectionMetrics#pastJoinGrace}.
+ * storm-send-buffer-overflow}. A peer is never counted during the first {@link #JOIN_GRACE_MS}
+ * after it spawns; see {@code StormConnectionMetrics#pastJoinGrace}.
  *
  * <p>PZ queues HIGH-priority broadcasts (Weather, SyncClock, faction sync, ClientCommand, region
  * events, in-flight chunk data) to every {@code fullyConnected} peer without any check on send
@@ -40,6 +40,13 @@ public final class PeerSendBufferKickConfig {
     public static final int MIN_HOLD_TICKS = 1;
     public static final int MAX_HOLD_TICKS = 6000;
     public static final int DEFAULT_HOLD_TICKS = 50;
+
+    /**
+     * How long after spawn the watchdog leaves a peer alone. The spawn sync queues up to ~55 MB on
+     * a healthy link and drains at 100-250 KB/s, so the queue needs up to ~4 minutes to fall back
+     * under the default threshold.
+     */
+    public static final long JOIN_GRACE_MS = 300_000L;
 
     private static volatile long THRESHOLD_BYTES = (long) DEFAULT_MB * 1024L * 1024L;
     private static volatile int HOLD_TICKS = DEFAULT_HOLD_TICKS;
