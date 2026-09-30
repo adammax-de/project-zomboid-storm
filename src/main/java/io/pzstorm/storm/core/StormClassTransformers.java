@@ -314,6 +314,7 @@ import io.pzstorm.storm.patch.performance.ServerMapSaveAllPatch;
 import io.pzstorm.storm.patch.performance.ServerPlayerDBSavePatch;
 import io.pzstorm.storm.patch.performance.ServerTickPatch;
 import io.pzstorm.storm.patch.performance.SpriteRendererFrameFencePatch;
+import io.pzstorm.storm.patch.performance.SpriteRendererRingBufferSizingPatch;
 import io.pzstorm.storm.patch.performance.StatisticManagerUpdatePatch;
 import io.pzstorm.storm.patch.performance.StatsGetPatch;
 import io.pzstorm.storm.patch.performance.SteamUtilsRunLoopPatch;
@@ -459,6 +460,10 @@ public class StormClassTransformers {
             if (!StormEnv.isStormServer()) {
                 registerTransformer(new GLVertexBufferObjectPersistentMapPatch());
                 registerTransformer(new SpriteRendererFrameFencePatch());
+                if (Boolean.parseBoolean(
+                        System.getProperty("storm.experimental.clientperf.spriteRing", "true"))) {
+                    registerTransformer(new SpriteRendererRingBufferSizingPatch());
+                }
                 registerTransformer(new PuddleBatchRenderPatch());
                 registerTransformer(new PuddleBatchInvalidationPatch());
                 registerTransformer(new PuddleBatchChunkReusePatch());

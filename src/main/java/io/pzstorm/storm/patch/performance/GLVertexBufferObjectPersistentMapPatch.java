@@ -19,14 +19,15 @@ import net.bytebuddy.pool.TypePool;
  * <p>Every sprite batch the render thread fills goes through {@code GLVertexBufferObject.map()},
  * which orphans the buffer ({@code glBufferData(NULL)}) and then {@code glMapBufferRange}s it, and
  * through {@code unmap()}, which {@code glUnmapBuffer}s it. The sprite ring does that for a VBO and
- * an IBO per 65 KB batch, many times a frame. This patch gives each eligible instance {@link
+ * an IBO per batch, many times a frame. This patch gives each eligible instance {@link
  * io.pzstorm.storm.advice.persistentvbo.PersistentVboSupport#SLOTS} immutable buffers ({@code
  * glBufferStorage}, write + persistent + coherent) that are mapped once and stay mapped for the
  * life of the process. {@code map()} rotates to the next slot, {@code unmap()} records which frame
  * wrote it, and one {@code glFenceSync} per frame (see {@link SpriteRendererFrameFencePatch}) is
- * what a slot waits on before it is written again. With 128 ring buffers times 4 slots the reuse
- * distance is about 512 batches, so the wait almost never blocks; the puddle pool reuses its buffer
- * 0 every frame, and its slot rotation keeps that wait on a frame four back.
+ * what a slot waits on before it is written again. {@link SpriteRendererRingBufferSizingPatch}
+ * sizes the ring as 16 buffers of 1 MiB, so with 4 slots the reuse distance is 64 batches (512
+ * batches of 65 KB under vanilla sizing) and the wait almost never blocks; the puddle pool reuses
+ * its buffer 0 every frame, and its slot rotation keeps that wait on a frame four back.
  *
  * <p>Why a client bytecode patch: the cost is inside private GL calls in a Java class on the render
  * thread. No Lua and no server change reaches them.
@@ -40,8 +41,9 @@ import net.bytebuddy.pool.TypePool;
  * the patch is a pure pass-through. A missing target method fails the transform at weave time and
  * leaves the class vanilla.
  *
- * <p>GPU memory: four times the vanilla ring, about 50 MB in normal play and roughly four times
- * that when {@code Core.debug} enlarges the ring to 256 x 256 KB.
+ * <p>GPU memory: four slots for every buffer. The 16 x 1 MiB ring takes about 69 MiB and the puddle
+ * pool up to about 13 MiB more. Under vanilla ring sizing the ring takes about 35 MiB, or about 277
+ * MiB when {@code Core.debug} enlarges it to 256 x 256 KB.
  *
  * <p>Re-validate on each game update: {@code map()}, {@code unmap()}, {@code clear()} and {@code
  * doDestroy()} on {@code GLVertexBufferObject} and its {@code size}/{@code type}/{@code id}/{@code

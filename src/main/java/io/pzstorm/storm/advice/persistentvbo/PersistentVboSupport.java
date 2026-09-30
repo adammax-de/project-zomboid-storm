@@ -199,8 +199,8 @@ public final class PersistentVboSupport {
     private static boolean checkCapabilities() {
         try {
             GLCapabilities caps = GL.getCapabilities();
-            boolean storage = caps.OpenGL44 || caps.GL_ARB_buffer_storage;
-            boolean sync = caps.OpenGL32 || caps.GL_ARB_sync;
+            boolean storage = hasBufferStorage(caps);
+            boolean sync = hasSync(caps);
             if (!storage || !sync) {
                 StormLogger.LOGGER.info(
                         "Persistent VBO mapping unavailable (buffer_storage={}, sync={});"
@@ -219,6 +219,23 @@ public final class PersistentVboSupport {
                     "Persistent VBO capability check failed; using vanilla buffer mapping", t);
             return false;
         }
+    }
+
+    /**
+     * Whether the current thread's GL context can persistently map buffers and fence frames. Throws
+     * when the thread has no context.
+     */
+    static boolean contextSupportsPersistentMapping() {
+        GLCapabilities caps = GL.getCapabilities();
+        return hasBufferStorage(caps) && hasSync(caps);
+    }
+
+    private static boolean hasBufferStorage(GLCapabilities caps) {
+        return caps.OpenGL44 || caps.GL_ARB_buffer_storage;
+    }
+
+    private static boolean hasSync(GLCapabilities caps) {
+        return caps.OpenGL32 || caps.GL_ARB_sync;
     }
 
     private static void releaseNames(State state) {
