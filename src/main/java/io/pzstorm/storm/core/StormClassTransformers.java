@@ -76,6 +76,7 @@ import io.pzstorm.storm.patch.fixes.ItemContainerChainGuardPatch;
 import io.pzstorm.storm.patch.fixes.ItemTransactionPacketPatch;
 import io.pzstorm.storm.patch.fixes.NetTimedActionPacketPatch;
 import io.pzstorm.storm.patch.fixes.NetTimedActionParsePatch;
+import io.pzstorm.storm.patch.fixes.PlayerHitPlayerPacketHitDamagePatch;
 import io.pzstorm.storm.patch.fixes.PopManSaveAdoptFixPatch;
 import io.pzstorm.storm.patch.fixes.RefreshAnimSetsLockPatch;
 import io.pzstorm.storm.patch.fixes.RequestDataManagerFixPatch;
@@ -635,6 +636,7 @@ public class StormClassTransformers {
             registerTransformer(new AnimalIgnoredTroughExpiryPatch());
             registerTransformer(new AnimalWaterSourceFailoverPatch());
             registerTransformer(new SyncZonePacketSafehouseGuardPatch());
+            registerTransformer(new PlayerHitPlayerPacketHitDamagePatch());
             registerTransformer(new IsoObjectTransmitUpdatedSpriteGuardPatch());
 
             registerTransformer(new BodyDamageUpdatePacketPatch());

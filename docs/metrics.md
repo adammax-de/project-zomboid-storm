@@ -1067,6 +1067,8 @@ what reports that, not this table.
 | `storm_ecs_class_cache` | Gauge | `1` = the `ClassValue` memoization of `ECSComponent.getECSClass(Class)` is active (default); `0` = vanilla superclass walk on every component lookup. `Storm.EcsClassCache`. |
 | `storm_entity_remove_fast_path` | Gauge | `1` = O(1) indexed removal from the engine's global entity array is active (default); `0` = vanilla linear identity scan of the whole array. `Storm.EntityRemoveFastPath`. A self-check failure latches the fast path off without moving this gauge — watch `pz_entity_array_removes_total{path="mismatch"}`. |
 | `storm_cell_unload_budget_per_tick` | Gauge | Maximum stale cells `ServerMap.postupdate` may destructively unload per tick; the rest stay loaded and are re-evaluated next tick. Default 2; `0` = vanilla (unload every stale cell in one tick). `Storm.CellUnloadBudgetPerTick`. Has no effect while [cell warming](#cell-warming-stormcellwarmingmetrics) owns `postupdate`. |
+| `storm_pvp_hits_always_damage` | Gauge | `1` = the server ignores the shooter's failed hit-chance roll on player-on-player hits, as 42.20 did; `0` = vanilla (default). `Storm.PvpHitsAlwaysDamage`. |
+| `storm_pvp_hits_damage_restored_total` | CounterWithCallback | PvP hits that arrived flagged as zero-damage and that the server applied with full damage. Stays flat while `storm_pvp_hits_always_damage` is `0` or `FirearmUseDamageChance` is not 3. |
 
 Useful PromQL:
 
