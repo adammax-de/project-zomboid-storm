@@ -152,6 +152,8 @@ import io.pzstorm.storm.patch.performance.CollisionManagerInitUpdatePatch;
 import io.pzstorm.storm.patch.performance.CollisionManagerResolveContactsPatch;
 import io.pzstorm.storm.patch.performance.CoopSlaveUpdatePatch;
 import io.pzstorm.storm.patch.performance.CorpseCountZombieIndexPatch;
+import io.pzstorm.storm.patch.performance.CutawayChangedInvalidationPatch;
+import io.pzstorm.storm.patch.performance.CutawayFlagClearTagPatch;
 import io.pzstorm.storm.patch.performance.CutawayLevelDataArrayCachePatch;
 import io.pzstorm.storm.patch.performance.CutawayVisitFastPathPatch;
 import io.pzstorm.storm.patch.performance.DesignationZoneAnimalFoodFastContainsPatch;
@@ -444,6 +446,8 @@ public class StormClassTransformers {
             registerTransformer(new CutawayLevelDataArrayCachePatch());
             registerTransformer(new FBORenderLevelsFreeSkipPatch());
             registerTransformer(new CutawayVisitFastPathPatch());
+            registerTransformer(new CutawayChangedInvalidationPatch());
+            registerTransformer(new CutawayFlagClearTagPatch());
             registerTransformer(new FBORenderCellRenderLayerHoistPatch());
             registerTransformer(new VehiclePartAnimSettledSkipPatch());
             if (!StormEnv.isStormServer()) {
