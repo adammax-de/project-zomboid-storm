@@ -173,6 +173,7 @@ import io.pzstorm.storm.patch.performance.FishSchoolManagerUpdatePatch;
 import io.pzstorm.storm.patch.performance.FluidContainerInvEpochPatch;
 import io.pzstorm.storm.patch.performance.FluidContainerUpdateSimulationFastPathPatch;
 import io.pzstorm.storm.patch.performance.FoodInvEpochPatch;
+import io.pzstorm.storm.patch.performance.GLVertexBufferObjectPersistentMapPatch;
 import io.pzstorm.storm.patch.performance.GameEntityManagerSavePatch;
 import io.pzstorm.storm.patch.performance.GameEntityManagerUpdatePatch;
 import io.pzstorm.storm.patch.performance.GameEntityUsingPlayerTrackingPatch;
@@ -303,6 +304,7 @@ import io.pzstorm.storm.patch.performance.ServerMapReleventNowFastContainsPatch;
 import io.pzstorm.storm.patch.performance.ServerMapSaveAllPatch;
 import io.pzstorm.storm.patch.performance.ServerPlayerDBSavePatch;
 import io.pzstorm.storm.patch.performance.ServerTickPatch;
+import io.pzstorm.storm.patch.performance.SpriteRendererFrameFencePatch;
 import io.pzstorm.storm.patch.performance.StatisticManagerUpdatePatch;
 import io.pzstorm.storm.patch.performance.StatsGetPatch;
 import io.pzstorm.storm.patch.performance.SteamUtilsRunLoopPatch;
@@ -443,6 +445,10 @@ public class StormClassTransformers {
             registerTransformer(new CutawayVisitFastPathPatch());
             registerTransformer(new FBORenderCellRenderLayerHoistPatch());
             registerTransformer(new VehiclePartAnimSettledSkipPatch());
+            if (!StormEnv.isStormServer()) {
+                registerTransformer(new GLVertexBufferObjectPersistentMapPatch());
+                registerTransformer(new SpriteRendererFrameFencePatch());
+            }
         }
         if (StormEnv.isStormServer()) {
             registerTransformer(new IsoGeneratorElectricityPatch());
