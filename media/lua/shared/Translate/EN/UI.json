@@ -22,5 +22,12 @@
   "UI_Storm_LowRam_Copy": "Copy",
   "UI_Storm_LowRam_Copied": "Copied",
   "UI_Storm_LowRam_Close": "Close",
-  "UI_Storm_LowRam_DontShowAgain": "Don't show this again"
+  "UI_Storm_LowRam_DontShowAgain": "Don't show this again",
+  "UI_Storm_ServerNoStorm_Title": "Storm is not running on this server",
+  "UI_Storm_ServerNoStorm_Intro": "This server has the Storm mod enabled, but it was started without the Storm bootstrap agent. Only the mod's Lua loaded, so Storm's Java fixes and performance patches are off.",
+  "UI_Storm_ServerNoStorm_Fix": "Server owner, add these two Java arguments to the server start script and restart the server. The server console prints the same lines at startup.",
+  "UI_Storm_ServerNoStorm_Linux": "Linux (start-server.sh)",
+  "UI_Storm_ServerNoStorm_Windows": "Windows (StartServer64.bat)",
+  "UI_Storm_ServerNoStorm_Hosted": "On a managed host, add them to the JVM arguments (vmArgs in ProjectZomboid64.json) after the server has downloaded the mod once.",
+  "UI_Storm_ServerNoStorm_Guide": "Full setup guide"
 }
