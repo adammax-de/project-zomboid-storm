@@ -135,6 +135,7 @@ import io.pzstorm.storm.patch.performance.BitHeaderIntReleasePatch;
 import io.pzstorm.storm.patch.performance.BitHeaderLongReleasePatch;
 import io.pzstorm.storm.patch.performance.BitHeaderShortReleasePatch;
 import io.pzstorm.storm.patch.performance.BodyDamageLastStateSkipPatch;
+import io.pzstorm.storm.patch.performance.BuildingRoomIdLookupPatch;
 import io.pzstorm.storm.patch.performance.CalcCountPlayersInRelevantPositionPatch;
 import io.pzstorm.storm.patch.performance.CharacterStatIndexPatch;
 import io.pzstorm.storm.patch.performance.CharacterTraitIndexPatch;
@@ -291,6 +292,7 @@ import io.pzstorm.storm.patch.performance.RemoveVehiclesPatch;
 import io.pzstorm.storm.patch.performance.RemoveZombiesPatch;
 import io.pzstorm.storm.patch.performance.RequestZipListParsePatch;
 import io.pzstorm.storm.patch.performance.SafeHouseUpdatePatch;
+import io.pzstorm.storm.patch.performance.ScriptParserCommentsPatch;
 import io.pzstorm.storm.patch.performance.SendWorldMapPlayerPositionPatch;
 import io.pzstorm.storm.patch.performance.ServerCellLoad2Patch;
 import io.pzstorm.storm.patch.performance.ServerCellRecalcAll2Patch;
@@ -329,6 +331,7 @@ import io.pzstorm.storm.patch.performance.VehicleManagerSendVehiclesPatch;
 import io.pzstorm.storm.patch.performance.VehicleManagerServerUpdatePatch;
 import io.pzstorm.storm.patch.performance.VehiclePartAnimSettledSkipPatch;
 import io.pzstorm.storm.patch.performance.VehicleSoundRelevancePatch;
+import io.pzstorm.storm.patch.performance.VehicleZoneDedupPatch;
 import io.pzstorm.storm.patch.performance.VirtualAnimalStridePatch;
 import io.pzstorm.storm.patch.performance.WarManagerUpdatePatch;
 import io.pzstorm.storm.patch.performance.WeatherFxScanSkipPatch;
@@ -473,6 +476,11 @@ public class StormClassTransformers {
             }
         }
         if (StormEnv.isStormServer()) {
+            if (!"false".equalsIgnoreCase(System.getProperty("storm.server.loadOptimizations"))) {
+                registerTransformer(new ScriptParserCommentsPatch());
+                registerTransformer(new BuildingRoomIdLookupPatch());
+                registerTransformer(new VehicleZoneDedupPatch());
+            }
             registerTransformer(new IsoGeneratorElectricityPatch());
             registerTransformer(new NetTimedActionParsePatch());
             registerTransformer(new IsoAnimalUpdateTimingPatch());
