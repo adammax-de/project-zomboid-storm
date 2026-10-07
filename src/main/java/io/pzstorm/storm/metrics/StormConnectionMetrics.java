@@ -65,20 +65,26 @@ import zombie.network.GameServer;
  * <p><b>Watchdog.</b> When {@link PeerSendBufferKickConfig#enabled()} and a peer's {@code
  * bytesInSendBufferHigh} stays above {@link PeerSendBufferKickConfig#thresholdBytes()} for {@link
  * PeerSendBufferKickConfig#holdTicks()} consecutive ticks, that peer is force-disconnected with
- * reason {@link #KICK_REASON}. A peer still inside vanilla's post-join grace ({@link
- * #pastJoinGrace}) is never counted, because the spawn-time container and item sync routinely
- * queues more than the threshold on a healthy link. The kick sends a {@code Kicked} packet first.
- * That packet travels at immediate priority and so overtakes the backlog, whereas RakNet queues its
- * own disconnection notice behind it. Disconnects are deferred until after the iteration finishes
- * because {@code UdpEngine.forceDisconnect} mutates {@code udpEngine.connections} (calls {@code
- * removeConnection}) — kicking mid-iteration would skip the next peer in the list.
+ * reason {@link #KICK_REASON}. A peer that spawned less than {@link
+ * PeerSendBufferKickConfig#JOIN_GRACE_MS} ago ({@link #pastJoinGrace}) is never counted, because
+ * the spawn-time container and item sync routinely queues more than the threshold on a healthy link
+ * and takes minutes to drain. The kick sends a {@code Kicked} packet first. That packet travels at
+ * immediate priority and so overtakes the backlog, whereas RakNet queues its own disconnection
+ * notice behind it. Disconnects are deferred until after the iteration finishes because {@code
+ * UdpEngine.forceDisconnect} mutates {@code udpEngine.connections} (calls {@code removeConnection})
+ * — kicking mid-iteration would skip the next peer in the list.
  */
 public final class StormConnectionMetrics {
 
     public static final String KICK_REASON = "storm-send-buffer-overflow";
 
+    static final long SPAWN_STAMP_LEAD_MS = 15_000L;
+
     private static final String KICK_MESSAGE =
-            "The server's send queue to you backed up (" + KICK_REASON + "). Please reconnect.";
+            "Your internet connection is bad and was not receiving data from the server in time."
+                    + " You had to be disconnected to prevent the server from lagging for everyone"
+                    + " else. To fix this, reboot your router and computer, and stop other internet"
+                    + " usage like downloads, streaming, or other games.";
 
     private static final Gauge SEND_BUFFER_BYTES =
             Gauge.builder()
@@ -367,11 +373,16 @@ public final class StormConnectionMetrics {
     }
 
     /**
-     * Vanilla's own test for "this peer has finished joining", the one {@code PingManager} applies
-     * before a ping kick. It turns true about 75 s after {@code setFullyConnected()}.
+     * True once the peer spawned more than {@link PeerSendBufferKickConfig#JOIN_GRACE_MS} ago.
+     * {@code setFullyConnected()} runs at spawn and stamps {@code connectionTimestamp} {@link
+     * #SPAWN_STAMP_LEAD_MS} ahead of the clock, so the spawn instant is the stamp minus that lead.
      */
     static boolean pastJoinGrace(UdpConnection c) {
-        return c.isFullyConnected() && c.isConnectionGraceIntervalTimeout();
+        if (!c.isFullyConnected()) {
+            return false;
+        }
+        long spawnedAt = c.connectionTimestamp - SPAWN_STAMP_LEAD_MS;
+        return System.currentTimeMillis() > spawnedAt + PeerSendBufferKickConfig.JOIN_GRACE_MS;
     }
 
     /**

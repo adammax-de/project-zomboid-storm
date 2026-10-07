@@ -12,8 +12,7 @@ import zombie.core.raknet.UdpConnection;
  * client re-sends PlayerConnect for the new character) and for each split-screen coop player. Main
  * thread.
  *
- * <p>Fired by {@code GameServerPlayerConnectionEventsPatch}. Replaces the deprecated {@link
- * io.pzstorm.storm.event.lua.OnPlayerFullyConnectedEvent}.
+ * <p>Fired by {@code GameServerPlayerConnectionEventsPatch}.
  */
 public class OnPlayerEnterWorldEvent implements ZomboidEvent {
 

@@ -16,11 +16,6 @@ import io.prometheus.metrics.core.metrics.Histogram;
  * processed, discarded back to the pool. A non-zero rate during a reconnect storm confirms the cap
  * is engaging; a sustained non-zero rate under steady-state load indicates the cap (the {@code
  * Storm.NetDataCapMs} sandbox option) is too tight.
- *
- * <p>{@link #DEFERRED_TOTAL_DEPRECATED} publishes the identical count under the original {@code
- * pz_netdata_deferred_total} name — a misnomer (nothing is deferred; the packet is dropped) kept
- * only so existing dashboards and alerts keep working. New queries must use {@code
- * pz_netdata_dropped_total}.
  */
 public final class NetDataMetrics {
 
@@ -40,19 +35,6 @@ public final class NetDataMetrics {
                                     + " for good: the packet was already dequeued and ACKed by"
                                     + " RakNet, is never processed, and is discarded back to the"
                                     + " pool.")
-                    .register(StormPrometheus.registry());
-
-    /**
-     * @deprecated Use {@code pz_netdata_dropped_total}. Publishes the identical count for dashboard
-     *     compatibility.
-     */
-    @Deprecated
-    private static final Counter DEFERRED_TOTAL_DEPRECATED =
-            Counter.builder()
-                    .name("pz_netdata_deferred_total")
-                    .help(
-                            "Use pz_netdata_dropped_total. Publishes the identical count for"
-                                    + " dashboard compatibility.")
                     .register(StormPrometheus.registry());
 
     private static final Counter VEHICLE_REQUEST_EXEMPT_TOTAL =
@@ -103,7 +85,6 @@ public final class NetDataMetrics {
 
     public static void recordDropped() {
         DROPPED_TOTAL.inc();
-        DEFERRED_TOTAL_DEPRECATED.inc();
     }
 
     public static void recordVehicleRequestExempt() {

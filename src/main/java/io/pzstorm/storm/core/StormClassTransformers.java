@@ -12,7 +12,9 @@ import io.pzstorm.storm.patch.client.GameClientStartClientRetryPatch;
 import io.pzstorm.storm.patch.client.ImageDataCreateSteamAvatarLeakPatch;
 import io.pzstorm.storm.patch.client.IsoBulletTracerEffectsConfigNullGuardPatch;
 import io.pzstorm.storm.patch.client.IsoFallingClothingDropNullGuardPatch;
+import io.pzstorm.storm.patch.client.IsoHutchNullAnimalSlotGuardPatch;
 import io.pzstorm.storm.patch.client.IsoObjectAdminSeeAllTargetAlphaPatch;
+import io.pzstorm.storm.patch.client.IsoTreePlayerRoomNullGuardPatch;
 import io.pzstorm.storm.patch.client.IsoWorldInventoryObjectRenderSpriteGuardPatch;
 import io.pzstorm.storm.patch.client.LoadingQueueStateTcpDrainPatch;
 import io.pzstorm.storm.patch.client.LoginQueueOverTcpPatch;
@@ -59,6 +61,7 @@ import io.pzstorm.storm.patch.fixes.DebugLogStreamFormatPatch;
 import io.pzstorm.storm.patch.fixes.GameServerStartPMChatPatch;
 import io.pzstorm.storm.patch.fixes.GeneralActionPacketPatch;
 import io.pzstorm.storm.patch.fixes.HutchDirtRateFixPatch;
+import io.pzstorm.storm.patch.fixes.InventoryItemGetOutermostContainerPatch;
 import io.pzstorm.storm.patch.fixes.InventoryItemStoreByteDataPatch;
 import io.pzstorm.storm.patch.fixes.IsoAnimalCanClimbStairsNullDefGuardPatch;
 import io.pzstorm.storm.patch.fixes.IsoAnimalReattachBackToMomPatch;
@@ -70,15 +73,14 @@ import io.pzstorm.storm.patch.fixes.IsoMovingObjectIsPushedByForSeparateNullDefG
 import io.pzstorm.storm.patch.fixes.IsoObjectIDAllocateFixPatch;
 import io.pzstorm.storm.patch.fixes.IsoObjectTransmitUpdatedSpriteGuardPatch;
 import io.pzstorm.storm.patch.fixes.IsoZombieUpdateFixPatch;
+import io.pzstorm.storm.patch.fixes.ItemContainerChainGuardPatch;
 import io.pzstorm.storm.patch.fixes.ItemTransactionPacketPatch;
 import io.pzstorm.storm.patch.fixes.NetTimedActionPacketPatch;
 import io.pzstorm.storm.patch.fixes.NetTimedActionParsePatch;
+import io.pzstorm.storm.patch.fixes.PlayerHitPlayerPacketHitDamagePatch;
 import io.pzstorm.storm.patch.fixes.PopManSaveAdoptFixPatch;
 import io.pzstorm.storm.patch.fixes.RefreshAnimSetsLockPatch;
 import io.pzstorm.storm.patch.fixes.RequestDataManagerFixPatch;
-import io.pzstorm.storm.patch.fixes.RequestSaveCellSuppressPatch;
-import io.pzstorm.storm.patch.fixes.SaveChunkThreadCrcRacePatch;
-import io.pzstorm.storm.patch.fixes.SaveLoadedTaskCrcRacePatch;
 import io.pzstorm.storm.patch.fixes.ServerCellRecalcCrashGuardPatch;
 import io.pzstorm.storm.patch.fixes.SitOnFurnitureBoxedInChairPatch;
 import io.pzstorm.storm.patch.fixes.SpriteConfigFixPatch;
@@ -134,6 +136,7 @@ import io.pzstorm.storm.patch.performance.BitHeaderIntReleasePatch;
 import io.pzstorm.storm.patch.performance.BitHeaderLongReleasePatch;
 import io.pzstorm.storm.patch.performance.BitHeaderShortReleasePatch;
 import io.pzstorm.storm.patch.performance.BodyDamageLastStateSkipPatch;
+import io.pzstorm.storm.patch.performance.BuildingRoomIdLookupPatch;
 import io.pzstorm.storm.patch.performance.CalcCountPlayersInRelevantPositionPatch;
 import io.pzstorm.storm.patch.performance.CharacterStatIndexPatch;
 import io.pzstorm.storm.patch.performance.CharacterTraitIndexPatch;
@@ -151,6 +154,8 @@ import io.pzstorm.storm.patch.performance.CollisionManagerInitUpdatePatch;
 import io.pzstorm.storm.patch.performance.CollisionManagerResolveContactsPatch;
 import io.pzstorm.storm.patch.performance.CoopSlaveUpdatePatch;
 import io.pzstorm.storm.patch.performance.CorpseCountZombieIndexPatch;
+import io.pzstorm.storm.patch.performance.CutawayChangedInvalidationPatch;
+import io.pzstorm.storm.patch.performance.CutawayFlagClearTagPatch;
 import io.pzstorm.storm.patch.performance.CutawayLevelDataArrayCachePatch;
 import io.pzstorm.storm.patch.performance.CutawayVisitFastPathPatch;
 import io.pzstorm.storm.patch.performance.DesignationZoneAnimalFoodFastContainsPatch;
@@ -173,6 +178,7 @@ import io.pzstorm.storm.patch.performance.FishSchoolManagerUpdatePatch;
 import io.pzstorm.storm.patch.performance.FluidContainerInvEpochPatch;
 import io.pzstorm.storm.patch.performance.FluidContainerUpdateSimulationFastPathPatch;
 import io.pzstorm.storm.patch.performance.FoodInvEpochPatch;
+import io.pzstorm.storm.patch.performance.GLVertexBufferObjectPersistentMapPatch;
 import io.pzstorm.storm.patch.performance.GameEntityManagerSavePatch;
 import io.pzstorm.storm.patch.performance.GameEntityManagerUpdatePatch;
 import io.pzstorm.storm.patch.performance.GameEntityUsingPlayerTrackingPatch;
@@ -272,6 +278,12 @@ import io.pzstorm.storm.patch.performance.PropertyContainerHasIdCachePatch;
 import io.pzstorm.storm.patch.performance.PropertyContainerHasStringIdCachePatch;
 import io.pzstorm.storm.patch.performance.PublicServerUtilUpdatePatch;
 import io.pzstorm.storm.patch.performance.PublicServerUtilUpdatePlayerCountPatch;
+import io.pzstorm.storm.patch.performance.PuddleBatchChunkReusePatch;
+import io.pzstorm.storm.patch.performance.PuddleBatchInvalidationPatch;
+import io.pzstorm.storm.patch.performance.PuddleBatchRenderPatch;
+import io.pzstorm.storm.patch.performance.PuddleDepthClampPatch;
+import io.pzstorm.storm.patch.performance.PuddleShaderCompileFallbackPatch;
+import io.pzstorm.storm.patch.performance.PuddleShaderSourceRewritePatch;
 import io.pzstorm.storm.patch.performance.RCONServerUpdatePatch;
 import io.pzstorm.storm.patch.performance.RanchAnimalSpawnMetricsPatch;
 import io.pzstorm.storm.patch.performance.RandAdjustForFrameratePatch;
@@ -281,6 +293,7 @@ import io.pzstorm.storm.patch.performance.RemoveVehiclesPatch;
 import io.pzstorm.storm.patch.performance.RemoveZombiesPatch;
 import io.pzstorm.storm.patch.performance.RequestZipListParsePatch;
 import io.pzstorm.storm.patch.performance.SafeHouseUpdatePatch;
+import io.pzstorm.storm.patch.performance.ScriptParserCommentsPatch;
 import io.pzstorm.storm.patch.performance.SendWorldMapPlayerPositionPatch;
 import io.pzstorm.storm.patch.performance.ServerCellLoad2Patch;
 import io.pzstorm.storm.patch.performance.ServerCellRecalcAll2Patch;
@@ -303,6 +316,8 @@ import io.pzstorm.storm.patch.performance.ServerMapReleventNowFastContainsPatch;
 import io.pzstorm.storm.patch.performance.ServerMapSaveAllPatch;
 import io.pzstorm.storm.patch.performance.ServerPlayerDBSavePatch;
 import io.pzstorm.storm.patch.performance.ServerTickPatch;
+import io.pzstorm.storm.patch.performance.SpriteRendererFrameFencePatch;
+import io.pzstorm.storm.patch.performance.SpriteRendererRingBufferSizingPatch;
 import io.pzstorm.storm.patch.performance.StatisticManagerUpdatePatch;
 import io.pzstorm.storm.patch.performance.StatsGetPatch;
 import io.pzstorm.storm.patch.performance.SteamUtilsRunLoopPatch;
@@ -315,7 +330,9 @@ import io.pzstorm.storm.patch.performance.UsingPlayerSweepFastPathPatch;
 import io.pzstorm.storm.patch.performance.UsingPlayerUpdatePatch;
 import io.pzstorm.storm.patch.performance.VehicleManagerSendVehiclesPatch;
 import io.pzstorm.storm.patch.performance.VehicleManagerServerUpdatePatch;
+import io.pzstorm.storm.patch.performance.VehiclePartAnimSettledSkipPatch;
 import io.pzstorm.storm.patch.performance.VehicleSoundRelevancePatch;
+import io.pzstorm.storm.patch.performance.VehicleZoneDedupPatch;
 import io.pzstorm.storm.patch.performance.VirtualAnimalStridePatch;
 import io.pzstorm.storm.patch.performance.WarManagerUpdatePatch;
 import io.pzstorm.storm.patch.performance.WeatherFxScanSkipPatch;
@@ -337,6 +354,7 @@ import io.pzstorm.storm.patch.performance.ZomboidRadioUpdatePatch;
 import io.pzstorm.storm.patch.popman.DebugCommandsNativePatch;
 import io.pzstorm.storm.patch.popman.MPDebugInfoNativePatch;
 import io.pzstorm.storm.patch.popman.MapCollisionDataNativePatch;
+import io.pzstorm.storm.patch.popman.NativeFacadePatch;
 import io.pzstorm.storm.patch.popman.ZombiePopulationManagerNativePatch;
 import io.pzstorm.storm.patch.popman.ZombiePopulationRendererNativePatch;
 import io.pzstorm.storm.patch.rendering.EpilepsyWarningSkipPatch;
@@ -413,6 +431,8 @@ public class StormClassTransformers {
         registerTransformer(new IsoMovingObjectIsPushedByForSeparateNullDefGuardPatch());
         registerTransformer(new IsoGridSquareGetRoomNullDefGuardPatch());
         registerTransformer(new IsoGridSquareRemoveGlassAttachmentsPatch());
+        registerTransformer(new ItemContainerChainGuardPatch());
+        registerTransformer(new InventoryItemGetOutermostContainerPatch());
         registerTransformer(new BaseVehicleSavePatch());
         registerTransformer(new SitOnFurnitureBoxedInChairPatch());
         registerTransformer(new InventoryItemStoreByteDataPatch());
@@ -437,9 +457,29 @@ public class StormClassTransformers {
             registerTransformer(new CutawayLevelDataArrayCachePatch());
             registerTransformer(new FBORenderLevelsFreeSkipPatch());
             registerTransformer(new CutawayVisitFastPathPatch());
+            registerTransformer(new CutawayChangedInvalidationPatch());
+            registerTransformer(new CutawayFlagClearTagPatch());
             registerTransformer(new FBORenderCellRenderLayerHoistPatch());
+            registerTransformer(new VehiclePartAnimSettledSkipPatch());
+            if (!StormEnv.isStormServer()) {
+                registerTransformer(new GLVertexBufferObjectPersistentMapPatch());
+                registerTransformer(new SpriteRendererFrameFencePatch());
+                if (Boolean.parseBoolean(
+                        System.getProperty("storm.experimental.clientperf.spriteRing", "true"))) {
+                    registerTransformer(new SpriteRendererRingBufferSizingPatch());
+                }
+                registerTransformer(new PuddleBatchRenderPatch());
+                registerTransformer(new PuddleBatchInvalidationPatch());
+                registerTransformer(new PuddleBatchChunkReusePatch());
+                registerTransformer(new PuddleShaderSourceRewritePatch());
+                registerTransformer(new PuddleShaderCompileFallbackPatch());
+                registerTransformer(new PuddleDepthClampPatch());
+            }
         }
         if (StormEnv.isStormServer()) {
+            registerTransformer(new ScriptParserCommentsPatch());
+            registerTransformer(new BuildingRoomIdLookupPatch());
+            registerTransformer(new VehicleZoneDedupPatch());
             registerTransformer(new IsoGeneratorElectricityPatch());
             registerTransformer(new NetTimedActionParsePatch());
             registerTransformer(new IsoAnimalUpdateTimingPatch());
@@ -544,7 +584,7 @@ public class StormClassTransformers {
         // Off by default: the Java port of PZPopMan64 (population manager + collision map)
         // is experimental. With it on, every native of the DLL is Java and the library is
         // never loaded.
-        if (Boolean.getBoolean("storm.popman.java")) {
+        if (Boolean.getBoolean("storm.popman.java") && popManPortMatchesGame()) {
             registerTransformer(new ZombiePopulationManagerNativePatch());
             registerTransformer(new MapCollisionDataNativePatch());
             registerTransformer(new MPDebugInfoNativePatch());
@@ -588,6 +628,8 @@ public class StormClassTransformers {
             registerTransformer(new IsoWorldInventoryObjectRenderSpriteGuardPatch());
             registerTransformer(new CombatManagerBallisticsNullGuardPatch());
             registerTransformer(new IsoFallingClothingDropNullGuardPatch());
+            registerTransformer(new IsoHutchNullAnimalSlotGuardPatch());
+            registerTransformer(new IsoTreePlayerRoomNullGuardPatch());
             registerTransformer(new IsoBulletTracerEffectsConfigNullGuardPatch());
             registerTransformer(new RequestDataOverTcpPatch());
             registerTransformer(new PlayerProfileOverTcpPatch());
@@ -613,7 +655,6 @@ public class StormClassTransformers {
             registerTransformer(new ServerTickPatch());
             registerTransformer(new MainLoopDrainCapPatch());
             registerTransformer(new IsoObjectIDAllocateFixPatch());
-            registerTransformer(new RequestSaveCellSuppressPatch());
             registerTransformer(new ReceiveSandboxOptionsPatch());
             registerTransformer(new IsoZombieUpdateFixPatch());
             registerTransformer(new IsoAnimalRegistryFixPatch());
@@ -624,6 +665,7 @@ public class StormClassTransformers {
             registerTransformer(new AnimalIgnoredTroughExpiryPatch());
             registerTransformer(new AnimalWaterSourceFailoverPatch());
             registerTransformer(new SyncZonePacketSafehouseGuardPatch());
+            registerTransformer(new PlayerHitPlayerPacketHitDamagePatch());
             registerTransformer(new IsoObjectTransmitUpdatedSpriteGuardPatch());
 
             registerTransformer(new BodyDamageUpdatePacketPatch());
@@ -657,8 +699,6 @@ public class StormClassTransformers {
             registerTransformer(new ServerCellUpdatePatch());
             registerTransformer(new NetworkZombiePackerPostUpdatePatch());
             registerTransformer(new ServerChunkLoaderUpdateSavedPatch());
-            registerTransformer(new SaveChunkThreadCrcRacePatch());
-            registerTransformer(new SaveLoadedTaskCrcRacePatch());
             registerTransformer(new ServerMapQueuedSaveAllPatch());
             registerTransformer(new ServerMapPostUpdateWarmPatch());
             registerTransformer(new MovingObjectSchedulerBucketAddPatch());
@@ -773,6 +813,45 @@ public class StormClassTransformers {
             registerTransformer(new PacketReceivedPatch(packetClass));
         }
         errorIfTargetsAlreadyLoaded();
+    }
+
+    /**
+     * The five facades replace one library, so they apply together or not at all. A game build
+     * whose natives the port doesn't cover keeps vanilla {@code PZPopMan64}; a partial port would
+     * throw {@link UnsatisfiedLinkError} on the first unported call.
+     */
+    private static boolean popManPortMatchesGame() {
+        TypePool typePool =
+                TypePool.Default.of(
+                        new ClassFileLocator.Compound(
+                                ClassFileLocator.ForClassLoader.of(
+                                        StormClassTransformers.class.getClassLoader()),
+                                ClassFileLocator.ForClassLoader.ofSystemLoader()));
+        List<String> mismatches = new ArrayList<>();
+        try {
+            for (NativeFacadePatch patch :
+                    List.of(
+                            new ZombiePopulationManagerNativePatch(),
+                            new MapCollisionDataNativePatch(),
+                            new MPDebugInfoNativePatch(),
+                            new DebugCommandsNativePatch(),
+                            new ZombiePopulationRendererNativePatch())) {
+                for (String mismatch : patch.mismatches(typePool)) {
+                    mismatches.add(patch.getClassName() + " " + mismatch);
+                }
+            }
+        } catch (RuntimeException e) {
+            LOGGER.error("Java popman port disabled: cannot read the game's popman classes", e);
+            return false;
+        }
+        if (!mismatches.isEmpty()) {
+            LOGGER.error(
+                    "Java popman port disabled: it does not match this game build's natives,"
+                            + " using PZPopMan64 instead. Mismatches: {}",
+                    mismatches);
+            return false;
+        }
+        return true;
     }
 
     private static void registerTransformer(StormClassTransformer transformer) {

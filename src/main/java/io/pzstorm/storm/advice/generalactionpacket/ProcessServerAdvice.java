@@ -9,10 +9,8 @@ import zombie.network.packets.GeneralActionPacket;
 
 /**
  * Advice for {@code GeneralActionPacket.processServer()}. Delegates to {@link
- * GeneralActionPacketPatch#processServerFixed} which resolves the cancelling player from the
- * sending {@link UdpConnection} (vanilla {@code setReject} on the client never populates {@code
- * playerId}, so the packet alone can't be matched against the queue under {@link
- * io.pzstorm.storm.advice.actionmanager.StopAdvice}).
+ * GeneralActionPacketPatch#processServerFixed}, which resolves the cancelling player from the
+ * sending {@link UdpConnection} instead of the packet's client-supplied {@code playerId}.
  */
 public class ProcessServerAdvice {
 

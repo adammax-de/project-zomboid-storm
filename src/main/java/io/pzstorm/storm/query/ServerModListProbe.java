@@ -231,7 +231,8 @@ public final class ServerModListProbe {
 
         // LoginPacket.write reads the version off Core; failing here beats failing while the
         // connection's write lock is held.
-        System.err.println("probing as game version " + Core.getInstance().getVersionNumber());
+        System.err.println(
+                "probing as game version " + Core.getInstance().getGameAndBuildVersion());
         return true;
     }
 

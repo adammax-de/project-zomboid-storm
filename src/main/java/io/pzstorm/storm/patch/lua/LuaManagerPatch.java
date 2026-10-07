@@ -5,6 +5,7 @@ import static io.pzstorm.storm.logging.StormLogger.LOGGER;
 import io.pzstorm.storm.core.StormClassTransformer;
 import io.pzstorm.storm.event.core.StormEventDispatcher;
 import io.pzstorm.storm.event.zomboid.OnLuaManagerInitEvent;
+import io.pzstorm.storm.lua.LuaFileHooks;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.dynamic.DynamicType;
@@ -12,7 +13,10 @@ import net.bytebuddy.matcher.ElementMatchers;
 import net.bytebuddy.pool.TypePool;
 import zombie.ZomboidFileSystem;
 
-/** Patches {@link zombie.Lua.LuaManager} to log when Lua files are loaded via RunLuaInternal. */
+/**
+ * Patches {@link zombie.Lua.LuaManager} to log Lua file loads via RunLuaInternal and to run {@link
+ * LuaFileHooks} after the files they follow.
+ */
 public class LuaManagerPatch extends StormClassTransformer {
 
     public LuaManagerPatch() {
@@ -34,12 +38,18 @@ public class LuaManagerPatch extends StormClassTransformer {
 
     public static class RunLuaInternalAdvice {
         @Advice.OnMethodEnter
-        public static void onRunLuaInternal(@Advice.Argument(0) String filename) {
+        public static String onRunLuaInternal(@Advice.Argument(0) String filename) {
             if (filename != null) {
                 String absolutePath = ZomboidFileSystem.instance.resolveFileOrGUID(filename);
 
                 LOGGER.debug("[RunLuaInternal] Loading file: {}", absolutePath);
             }
+            return LuaFileHooks.pending(filename);
+        }
+
+        @Advice.OnMethodExit
+        public static void afterRunLuaInternal(@Advice.Enter String hook) {
+            LuaFileHooks.run(hook);
         }
     }
 

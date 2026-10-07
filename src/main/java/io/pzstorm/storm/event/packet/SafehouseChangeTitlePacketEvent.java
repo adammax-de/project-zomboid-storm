@@ -23,7 +23,7 @@ public class SafehouseChangeTitlePacketEvent extends PacketEvent {
 
     @Override
     public void capturePreState() {
-        SafeHouse safehouse = getSafehouse();
+        SafeHouse safehouse = getPacket().getSafehouse();
         if (safehouse != null) {
             previousTitle = safehouse.getTitle();
         }
@@ -32,13 +32,5 @@ public class SafehouseChangeTitlePacketEvent extends PacketEvent {
     @Override
     public String getName() {
         return "SafehouseChangeTitlePacketEvent";
-    }
-
-    public SafeHouse getSafehouse() {
-        return getPacket().getSafehouse();
-    }
-
-    public String getTitle() {
-        return (String) getField("title");
     }
 }

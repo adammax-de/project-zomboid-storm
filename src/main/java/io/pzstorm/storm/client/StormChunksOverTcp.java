@@ -427,6 +427,8 @@ public final class StormChunksOverTcp {
         buffer.position(0);
         RECEIVE_LOCK.lock();
         try {
+            // vanilla addIncoming moves sentRequests into pendingRequests before every receive
+            WorldStreamer.instance.udpUpdate();
             WorldStreamer.instance.receiveChunkPart(new ByteBufferReader(buffer));
         } finally {
             RECEIVE_LOCK.unlock();
@@ -451,6 +453,8 @@ public final class StormChunksOverTcp {
         buffer.position(0);
         RECEIVE_LOCK.lock();
         try {
+            // vanilla addIncoming moves sentRequests into pendingRequests before every receive
+            WorldStreamer.instance.udpUpdate();
             WorldStreamer.instance.receiveNotRequired(new ByteBufferReader(buffer));
         } finally {
             RECEIVE_LOCK.unlock();

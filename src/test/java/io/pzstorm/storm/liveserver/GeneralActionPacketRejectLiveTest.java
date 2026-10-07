@@ -16,15 +16,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * over the real network path used by a real Project Zomboid client when the user cancels a timed
  * action.
  *
- * <p>The vanilla bug: {@code GeneralActionPacket.setReject(byte)} only assigns {@code id} and
- * {@code state}, leaving the inherited {@code playerId} at its default. Without the patch, the
- * server-side {@code processServer} hands that bare packet to {@code ActionManager.stop}; {@link
+ * <p>The test sender's packet leaves {@code playerId} at its default, so it names no player.
+ * Without the patch, {@code processServer} hands that packet to {@code ActionManager.stop}; {@link
  * io.pzstorm.storm.advice.actionmanager.StopAdvice} (which filters by {@code (id, playerOnlineId)})
- * cannot match the queued action because the packet's {@code playerOnlineId} is {@code 0}.
+ * cannot match the queued action because the packet's {@code playerOnlineId} is {@code 0}. The
+ * patch passes only if it attributes the reject to the sending connection.
  *
  * <p><b>Why two clients are required:</b> the very first connection assigned by {@code GameServer}
  * lands in slot 0, so its {@code playerOnlineId} is {@code 0}. If we tested with that connection,
- * the queued action's {@code playerId.id} would also be {@code 0} and the bug-bare packet's {@code
+ * the queued action's {@code playerId.id} would also be {@code 0} and the packet's default {@code
  * playerId.id == 0} would match the queue trivially under {@code StopAdvice} — passing the test
  * even without the patch. To force a non-zero slot for the test sender, we connect a filler client
  * first (taking slot 0) and use a second connection (slot 1, online id 4) to send the Reject. The
@@ -41,8 +41,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
  *       byte id (via {@code stormtestseedaction}); assert the seeded action's online id is non-zero
  *       so the test exercises the bug path
  *   <li>Test sender ships a real {@code GeneralActionPacket} with {@code TransactionState.Reject}
- *       and that byte id, built via vanilla {@code setReject(byte)} so the on-wire {@code playerId}
- *       is left at default — exactly what the real game emits
+ *       and that byte id, with {@code playerId} left at its default
  *   <li>Server-side: poll {@code stormtestcountaction} until the queue empties (or fail)
  * </ol>
  *

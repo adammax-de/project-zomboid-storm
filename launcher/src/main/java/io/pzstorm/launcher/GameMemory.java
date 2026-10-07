@@ -20,7 +20,7 @@ public final class GameMemory {
 
     public static final int MANUAL_MIN_GB = 4;
     public static final int MANUAL_MAX_GB = 32;
-    public static final int AUTO_MAX_GB = 16;
+    public static final int AUTO_MAX_GB = 9;
     public static final int NATIVE_HEADROOM_GB = 9;
 
     private static final long GIB = 1L << 30;

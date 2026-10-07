@@ -10,7 +10,7 @@ class GameMemoryTest {
     private static final long GIB = 1L << 30;
 
     @Test
-    void autoIsHalfRamPlusOneCappedAtSixteenAndByNativeHeadroom() {
+    void autoIsHalfRamPlusOneCappedAtNineAndByNativeHeadroom() {
         assertEquals(0, GameMemory.autoGbFor(0));
         assertEquals(0, GameMemory.autoGbFor(-1));
         // small machines keep the game's own -Xmx (3 GB) — raising it starves the native side
@@ -24,10 +24,10 @@ class GameMemoryTest {
         // a 16 GB machine with an iGPU carve-out reports ~15.4 GB — the shape that used to get
         // -Xmx9g and die of native OOM
         assertEquals(6, GameMemory.autoGbFor((long) (15.4 * GIB)));
-        // half+1-capped once the machine is big enough
-        assertEquals(13, GameMemory.autoGbFor(24 * GIB));
-        assertEquals(16, GameMemory.autoGbFor(32 * GIB));
-        assertEquals(16, GameMemory.autoGbFor(128 * GIB));
+        // AUTO_MAX_GB-capped once the machine is big enough
+        assertEquals(9, GameMemory.autoGbFor(24 * GIB));
+        assertEquals(9, GameMemory.autoGbFor(32 * GIB));
+        assertEquals(9, GameMemory.autoGbFor(128 * GIB));
     }
 
     @Test

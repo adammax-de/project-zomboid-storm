@@ -125,7 +125,7 @@ public final class StormJoinPrewarm {
         // exactly the connect-time client branch of loadMods(String): translation mods
         // first, then the server's ordered list
         ArrayList<String> toLoad = new ArrayList<>();
-        invokePrivate(fs, "loadTranslationMods", new Class<?>[] {ArrayList.class}, toLoad);
+        invokePrivate(fs, "loadTranslationMods", new Class<?>[] {List.class}, toLoad);
         toLoad.addAll(serverMods);
         fs.loadMods(toLoad);
 

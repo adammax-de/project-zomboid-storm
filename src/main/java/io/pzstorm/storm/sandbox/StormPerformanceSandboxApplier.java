@@ -21,6 +21,7 @@ import io.pzstorm.storm.map.StormCellUnloadBudget;
 import io.pzstorm.storm.patch.fixes.AnimalZoneContainment;
 import io.pzstorm.storm.patch.fixes.AnimalZoneSafehouseGuard;
 import io.pzstorm.storm.patch.fixes.HutchDirtRateFix;
+import io.pzstorm.storm.patch.fixes.PvpHitsAlwaysDamage;
 import io.pzstorm.storm.patch.networking.GameServerTickRatePatch.UpdateLimitFactory;
 import io.pzstorm.storm.patch.networking.ServerFpsConfig;
 import io.pzstorm.storm.patch.performance.AnimalLOSTickInterval;
@@ -82,6 +83,7 @@ public final class StormPerformanceSandboxApplier {
     public static final String OPT_ANIMAL_ZONE_LEASH_DISTANCE = "Storm.AnimalZoneLeashDistance";
     public static final String OPT_ANIMAL_ZONE_SAFEHOUSE_PROTECTION =
             "Storm.AnimalZoneSafehouseProtection";
+    public static final String OPT_PVP_HITS_ALWAYS_DAMAGE = "Storm.PvpHitsAlwaysDamage";
     public static final String OPT_ENTITY_REMOVE_FAST_PATH = "Storm.EntityRemoveFastPath";
     public static final String OPT_VEHICLE_ALPHA_CHECK_SKIP = "Storm.VehicleAlphaCheckSkip";
     public static final String OPT_VEHICLE_SOUND_RELEVANCE_FAST_PATH =
@@ -145,6 +147,7 @@ public final class StormPerformanceSandboxApplier {
         applyAnimalZoneContainment();
         applyAnimalZoneLeashDistance();
         applyAnimalZoneSafehouseProtection();
+        applyPvpHitsAlwaysDamage();
         applyEntityRemoveFastPath();
         applyVehicleAlphaCheckSkip();
         applyVehicleSoundRelevanceFastPath();
@@ -353,6 +356,19 @@ public final class StormPerformanceSandboxApplier {
             return;
         }
         AnimalZoneSafehouseGuard.setEnabled(value);
+    }
+
+    /**
+     * Pushes {@link #OPT_PVP_HITS_ALWAYS_DAMAGE} through {@link
+     * PvpHitsAlwaysDamage#setEnabled(boolean)}. While on, the server ignores the shooter's failed
+     * hit-chance roll on player-on-player hits, as 42.20 did. {@code false} restores vanilla.
+     */
+    private static void applyPvpHitsAlwaysDamage() {
+        Boolean value = readBooleanOption(OPT_PVP_HITS_ALWAYS_DAMAGE);
+        if (value == null) {
+            return;
+        }
+        PvpHitsAlwaysDamage.setEnabled(value);
     }
 
     /**

@@ -248,8 +248,6 @@ public class LuaEventFactory {
                             OnHitZombieEvent.class,
                             OnBeingHitByZombieEvent.class,
                             OnSendMessageToChatEvent.class,
-                            OnPlayerFullyConnectedEvent.class,
-                            OnPlayerDisconnectedEvent.class,
                             OnAuthAttemptEvent.class
                         };
         for (Class<? extends LuaEvent> eventClass : eventClasses) {

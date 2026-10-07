@@ -150,6 +150,10 @@ public class StormEventHandler {
                     LOGGER.debug("Skipping stub lua: {}", luaPath);
                     continue;
                 }
+                if (luaPath.startsWith("lua/filehooks/")) {
+                    // LuaFileHooks runs these right after the game file they patch
+                    continue;
+                }
                 if (luaPath.startsWith("lua/client/") && !GameClient.client) {
                     LOGGER.debug("Skipping client lua (not a client): {}", luaPath);
                     continue;

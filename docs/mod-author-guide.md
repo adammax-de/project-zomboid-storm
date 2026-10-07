@@ -77,12 +77,6 @@ connection (old character leaves, new one enters), so a handler that tracks who
 is online should treat `isConnectionClosed() == false` as a character swap rather
 than a leave.
 
-The older `OnPlayerFullyConnectedEvent` / `OnPlayerDisconnectedEvent` classes in
-`io.pzstorm.storm.event.lua` are deprecated but unchanged. Storm never fired them;
-they are flattened snapshots (username, ip, steamId, coords, ...) that a mod
-dispatches itself or triggers from Lua, and any mod that still does so keeps
-working. New code should subscribe to the `zomboid` events above.
-
 ## Typed packet events
 
 In addition to the raw `OnPacketReceivedEvent`, nearly every patched packet has
@@ -95,7 +89,10 @@ typed event — their wire types are the Reliable/Unreliable subclasses; use
 `@OnPacketReceived("PlayerPacketReliable")` etc. to observe those. Subscribe with
 `@SubscribeEvent` on the typed class to get a strongly-typed `getPacket()`,
 field-cache helpers, and a `capturePreState()` hook for snapshotting state
-before the packet's `processServer` mutates it:
+before the packet's `processServer` mutates it. Typed events add no other
+accessors, except a few safehouse events that expose the state they snapshot
+in `capturePreState()` (e.g. `SafehouseChangeOwnerPacketEvent.getPreviousOwner()`).
+Read everything else from the packet:
 
 ```java
 @SubscribeEvent

@@ -25,8 +25,6 @@ public class AnimalDataGrowWaterGuardAdvice {
 
     public static final long LOG_INTERVAL_MS = 10L * 60L * 1000L;
     public static final ConcurrentHashMap<Integer, Long> LAST_LOG = new ConcurrentHashMap<>();
-    public static boolean DUPLICATE_CHECK_OFF_LOGGED = false;
-
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
     public static boolean onEnter(
             @Advice.FieldValue("parent") IsoAnimal parent, @Advice.Argument(0) String newType) {
@@ -34,15 +32,7 @@ public class AnimalDataGrowWaterGuardAdvice {
             return false;
         }
         boolean onWater = parent.checkForWater();
-        // 42.21: checkForChickenpocalypse(IsoAnimal) replaced the no-arg world scan. The other
-        // animal is not known here, so the duplicate-id defer stays off rather than guessing.
-        boolean duplicate = false;
-        if (!DUPLICATE_CHECK_OFF_LOGGED) {
-            DUPLICATE_CHECK_OFF_LOGGED = true;
-            LOGGER.error(
-                    "AnimalDataGrowWaterGuardPatch: checkForChickenpocalypse now takes IsoAnimal;"
-                            + " duplicate-id grow defer is off until re-verified.");
-        }
+        boolean duplicate = !onWater && parent.checkForChickenpocalypse(null);
         if (!onWater && !duplicate) {
             return false;
         }

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.pzstorm.storm.UnitTest;
+import io.pzstorm.storm.connection.PeerSendBufferKickConfig;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import org.junit.jupiter.api.Test;
@@ -11,44 +12,49 @@ import zombie.core.raknet.UdpConnection;
 
 /**
  * Pins {@code StormConnectionMetrics.pastJoinGrace}: the send-buffer watchdog leaves a peer alone
- * until vanilla's post-join grace has run out, so the spawn-time sync burst cannot get a healthy
- * peer kicked.
+ * for {@code PeerSendBufferKickConfig.JOIN_GRACE_MS} after spawn, so the spawn-time sync burst
+ * cannot get a healthy peer kicked.
  *
  * <p>{@code UdpConnection} is allocated without running its constructor, for the reason given in
  * {@link StormConnectionMetricsLabelTest}.
  */
 class StormConnectionMetricsJoinGraceTest implements UnitTest {
 
-    private static final long GRACE_MS = 60_000L;
+    private static final long GRACE_MS = PeerSendBufferKickConfig.JOIN_GRACE_MS;
+    private static final long VANILLA_GRACE_MS = 75_000L;
 
     @Test
     void aPeerThatHasNotFinishedJoiningIsInGrace() throws Exception {
-        long longAgo = System.currentTimeMillis() - 10 * GRACE_MS;
-        assertFalse(StormConnectionMetrics.pastJoinGrace(connection(false, longAgo)));
+        assertFalse(StormConnectionMetrics.pastJoinGrace(connection(false, 10 * GRACE_MS)));
     }
 
     @Test
     void aPeerThatJustSpawnedIsInGrace() throws Exception {
-        long justSpawned = System.currentTimeMillis() + 15_000L;
-        assertFalse(StormConnectionMetrics.pastJoinGrace(connection(true, justSpawned)));
+        assertFalse(StormConnectionMetrics.pastJoinGrace(connection(true, 0L)));
     }
 
     @Test
-    void aPeerTwentySecondsAfterSpawnIsInGrace() throws Exception {
-        long spawnedTwentySecondsAgo = System.currentTimeMillis() + 15_000L - 20_000L;
+    void aPeerPastVanillaGraceIsStillInGrace() throws Exception {
         assertFalse(
-                StormConnectionMetrics.pastJoinGrace(connection(true, spawnedTwentySecondsAgo)));
+                StormConnectionMetrics.pastJoinGrace(connection(true, VANILLA_GRACE_MS + 30_000L)));
     }
 
     @Test
-    void aLongConnectedPeerIsPastGrace() throws Exception {
-        long longAgo = System.currentTimeMillis() - 2 * GRACE_MS;
-        assertTrue(StormConnectionMetrics.pastJoinGrace(connection(true, longAgo)));
+    void aPeerJustInsideTheGraceIsInGrace() throws Exception {
+        assertFalse(StormConnectionMetrics.pastJoinGrace(connection(true, GRACE_MS - 5_000L)));
+    }
+
+    @Test
+    void aPeerJustPastTheGraceIsPastGrace() throws Exception {
+        assertTrue(StormConnectionMetrics.pastJoinGrace(connection(true, GRACE_MS + 5_000L)));
     }
 
     // ------------------------------------------------------------------ helpers
 
-    private static UdpConnection connection(boolean fullyConnected, long connectionTimestamp)
+    /**
+     * A connection stamped the way {@code setFullyConnected()} would have {@code spawnedAgoMs} ago.
+     */
+    private static UdpConnection connection(boolean fullyConnected, long spawnedAgoMs)
             throws Exception {
         Class<?> unsafeClass = Class.forName("sun.misc.Unsafe");
         Field theUnsafe = unsafeClass.getDeclaredField("theUnsafe");
@@ -60,7 +66,10 @@ class StormConnectionMetricsJoinGraceTest implements UnitTest {
         connected.setAccessible(true);
         connected.setBoolean(c, fullyConnected);
 
-        c.connectionTimestamp = connectionTimestamp;
+        c.connectionTimestamp =
+                System.currentTimeMillis()
+                        - spawnedAgoMs
+                        + StormConnectionMetrics.SPAWN_STAMP_LEAD_MS;
         return c;
     }
 }

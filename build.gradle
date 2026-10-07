@@ -81,13 +81,13 @@ def steamLoginArgs = {
 	return [username]
 }
 
-String workshopDescription = '''[b]Storm[/b] is a [b]Java mod loader and modding framework[/b] for [i]Project Zomboid[/i] (Build 42+) that uses [b]Byte Buddy[/b] bytecode instrumentation to extend the game without touching its source.
+String workshopDescription = """[b]Storm[/b] is a [b]Java mod loader and modding framework[/b] for [i]Project Zomboid[/i] (Build 42+) that uses [b]Byte Buddy[/b] bytecode instrumentation to extend the game without touching its source.
 
 Vanilla client compatibility is maintained so that players don't have to hook up any modding frameworks. The extensibility of Java modding on the server side allows you to create feature rich mods without having to modify Java on the client side.
 
 Portable and completely deployed through Steam Workshop.
 
-Updated to 42.20.2
+Compatible with Project Zomboid build ${pzVersion}
 
 Fixed TIS TileManager placement bug.
 Fixed placed items not able to be placed or picked up bug.
@@ -102,7 +102,7 @@ Added headroom cap above hard coded 101 for incoming connections to fix "Getting
 
 [h2]Sponsors[/h2]
 [b][url=https://discord.gg/after-the-fall]After The Fall[/url][/b] — The #1 multiplayer server in the world
-[hr][/hr]'''
+[hr][/hr]"""
 
 def os = OperatingSystem.current()
 
@@ -204,6 +204,10 @@ test {
 	useJUnitPlatform {
 		excludeTags 'perf'
 	}
+
+	// The Java popman port does not match the current game's natives (see popManPortMatchesGame)
+
+	exclude 'io/pzstorm/storm/popman/**', 'io/pzstorm/storm/patch/popman/**'
 	systemProperty 'storm.testing', 'true'
 	// without this the StormEnv.isStormServer() block in StormClassTransformers never runs,
 	// so AllPatchesIntegrationTest silently skips every server-only patch

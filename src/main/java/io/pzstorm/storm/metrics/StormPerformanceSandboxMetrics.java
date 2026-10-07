@@ -15,6 +15,7 @@ import io.pzstorm.storm.map.StormCellUnloadBudget;
 import io.pzstorm.storm.patch.fixes.AnimalZoneContainment;
 import io.pzstorm.storm.patch.fixes.AnimalZoneSafehouseGuard;
 import io.pzstorm.storm.patch.fixes.HutchDirtRateFix;
+import io.pzstorm.storm.patch.fixes.PvpHitsAlwaysDamage;
 import io.pzstorm.storm.patch.networking.GameServerTickRatePatch;
 import io.pzstorm.storm.patch.networking.ServerLockFpsConfig;
 import io.pzstorm.storm.patch.performance.AnimalLOSTickInterval;
@@ -305,6 +306,17 @@ public final class StormPerformanceSandboxMetrics {
                                     + " edit any zone (default).")
                     .register(StormPrometheus.registry());
 
+    private static final Gauge PVP_HITS_ALWAYS_DAMAGE =
+            Gauge.builder()
+                    .name("storm_pvp_hits_always_damage")
+                    .help(
+                            "Whether the server ignores the shooter's failed hit-chance roll on"
+                                    + " player-on-player hits, so every PvP hit it receives does"
+                                    + " damage as in 42.20. Sourced from the"
+                                    + " Storm.PvpHitsAlwaysDamage sandbox option. 1 = on; 0 ="
+                                    + " vanilla (default).")
+                    .register(StormPrometheus.registry());
+
     private static final Gauge ANIMAL_ZONE_LEASH_DISTANCE =
             Gauge.builder()
                     .name("storm_animal_zone_leash_distance")
@@ -468,6 +480,7 @@ public final class StormPerformanceSandboxMetrics {
         ANIMAL_ZONE_CONTAINMENT.set(AnimalZoneContainment.DEFAULT_ENABLED ? 1 : 0);
         ANIMAL_ZONE_LEASH_DISTANCE.set(AnimalZoneContainment.DEFAULT_LEASH_DISTANCE);
         ANIMAL_ZONE_SAFEHOUSE_PROTECTION.set(AnimalZoneSafehouseGuard.DEFAULT_ENABLED ? 1 : 0);
+        PVP_HITS_ALWAYS_DAMAGE.set(PvpHitsAlwaysDamage.DEFAULT_ENABLED ? 1 : 0);
         CELL_UNLOAD_BUDGET_PER_TICK.set(StormCellUnloadBudget.DEFAULT_BUDGET);
         ENTITY_REMOVE_FAST_PATH.set(StormEntityIndex.DEFAULT_ENABLED ? 1 : 0);
         VEHICLE_ALPHA_CHECK_SKIP.set(StormVehicleAlphaCheckSkip.DEFAULT_ENABLED ? 1 : 0);
@@ -565,6 +578,10 @@ public final class StormPerformanceSandboxMetrics {
 
     public static void setAnimalZoneSafehouseProtection(boolean enabled) {
         ANIMAL_ZONE_SAFEHOUSE_PROTECTION.set(enabled ? 1 : 0);
+    }
+
+    public static void setPvpHitsAlwaysDamage(boolean enabled) {
+        PVP_HITS_ALWAYS_DAMAGE.set(enabled ? 1 : 0);
     }
 
     public static void setAnimalZoneLeashDistance(int tiles) {

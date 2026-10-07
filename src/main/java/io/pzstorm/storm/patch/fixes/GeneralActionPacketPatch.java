@@ -19,17 +19,16 @@ import zombie.network.fields.character.PlayerID;
 import zombie.network.packets.GeneralActionPacket;
 
 /**
- * Fixes a vanilla bug surfaced by {@link io.pzstorm.storm.patch.fixes.ActionManagerPatch}: vanilla
- * {@code GeneralActionPacket.setReject(byte)} only assigns {@code id} and {@code state}, leaving
- * the inherited {@code playerId} at its default (online id {@code 0}). When the cancel arrives at
- * the server, {@link io.pzstorm.storm.advice.actionmanager.StopAdvice} requires {@code (id,
- * playerOnlineId)} to match a queued action — so the cancel never matches and {@code perform()}
- * fires anyway.
+ * Attributes a {@code GeneralActionPacket} reject to the connection that sent it. Vanilla {@code
+ * processServer} hands the packet to {@code ActionManager.stop}, and {@link
+ * io.pzstorm.storm.advice.actionmanager.StopAdvice} matches the queued action on the packet's
+ * {@code (id, playerOnlineId)}. That {@code playerId} is client-supplied, so a client could cancel
+ * another player's action by naming that player's online id.
  *
- * <p>This patch resolves the owning player from the {@link UdpConnection} that sent the cancel
- * (split-screen safe: scans all of {@code connection.players[]}) and stops the queued action
- * directly, so {@code StopAdvice} sees a properly-populated {@code playerId} and removes only the
- * correct entry.
+ * <p>This patch ignores the packet's {@code playerId}. It matches the byte id only against actions
+ * owned by one of {@code connection.players[]} (split-screen safe) and stops that queued action
+ * directly, so {@code StopAdvice} sees the stored {@code playerId} and removes only the owner's
+ * entry.
  *
  * <p>The advice replaces the entire body of {@code processServer}; on exception the original
  * vanilla method runs as a fallback (matches the pattern in {@link NetTimedActionPacketPatch}).

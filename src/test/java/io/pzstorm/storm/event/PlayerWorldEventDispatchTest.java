@@ -3,8 +3,6 @@ package io.pzstorm.storm.event;
 import io.pzstorm.storm.IntegrationTest;
 import io.pzstorm.storm.event.core.StormEventDispatcher;
 import io.pzstorm.storm.event.core.SubscribeEvent;
-import io.pzstorm.storm.event.lua.OnPlayerDisconnectedEvent;
-import io.pzstorm.storm.event.lua.OnPlayerFullyConnectedEvent;
 import io.pzstorm.storm.event.zomboid.OnPlayerEnterWorldEvent;
 import io.pzstorm.storm.event.zomboid.OnPlayerLeaveWorldEvent;
 import org.junit.jupiter.api.Assertions;
@@ -35,18 +33,6 @@ class PlayerWorldEventDispatchTest implements IntegrationTest {
         Assertions.assertTrue(handler.received.isConnectionClosed());
     }
 
-    @Test
-    @SuppressWarnings("deprecation")
-    void newEventsShouldNotReachDeprecatedSubscribers() {
-        DeprecatedHandler handler = new DeprecatedHandler();
-        StormEventDispatcher.registerEventHandler(handler);
-
-        StormEventDispatcher.dispatchEvent(new OnPlayerEnterWorldEvent(null, null));
-        StormEventDispatcher.dispatchEvent(new OnPlayerLeaveWorldEvent(null, null, true));
-
-        Assertions.assertFalse(handler.called);
-    }
-
     public static class EnterHandler {
         OnPlayerEnterWorldEvent received;
 
@@ -62,21 +48,6 @@ class PlayerWorldEventDispatchTest implements IntegrationTest {
         @SubscribeEvent
         public void onLeave(OnPlayerLeaveWorldEvent event) {
             received = event;
-        }
-    }
-
-    @SuppressWarnings("deprecation")
-    public static class DeprecatedHandler {
-        boolean called;
-
-        @SubscribeEvent
-        public void onConnected(OnPlayerFullyConnectedEvent event) {
-            called = true;
-        }
-
-        @SubscribeEvent
-        public void onDisconnected(OnPlayerDisconnectedEvent event) {
-            called = true;
         }
     }
 }

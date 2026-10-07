@@ -22,9 +22,9 @@ public class SafehouseChangeRespawnPacketEvent extends PacketEvent {
 
     @Override
     public void capturePreState() {
-        SafeHouse safehouse = getSafehouse();
+        SafeHouse safehouse = getPacket().getSafehouse();
         if (safehouse != null) {
-            wasRespawning = safehouse.isRespawnInSafehouse(getPlayer());
+            wasRespawning = safehouse.isRespawnInSafehouse(getPacket().getUsername());
         }
     }
 
@@ -32,31 +32,8 @@ public class SafehouseChangeRespawnPacketEvent extends PacketEvent {
         return wasRespawning;
     }
 
-    /**
-     * Returns whether this packet will add the player to the respawn list. Note: the underlying
-     * packet field {@code doRemove} is misnamed — {@code true} means the player is being added, not
-     * removed.
-     */
-    public boolean isAddingRespawn() {
-        Boolean v = (Boolean) getField("doRemove");
-        return v != null && v;
-    }
-
     @Override
     public String getName() {
         return "SafehouseChangeRespawnPacketEvent";
-    }
-
-    public SafeHouse getSafehouse() {
-        return getPacket().getSafehouse();
-    }
-
-    public String getPlayer() {
-        return getPacket().getUsername();
-    }
-
-    public boolean doRemove() {
-        Boolean v = (Boolean) getField("doRemove");
-        return v != null && v;
     }
 }
